@@ -6,6 +6,37 @@ export type RootScreenProps<
 > = StackScreenProps<RootStackParamList, S>;
 
 export type RootStackParamList = {
-  [Paths.Example]: undefined;
+  // Common screens
+  [Paths.Home]: undefined;
   [Paths.Startup]: undefined;
+
+  // Auth screens
+  [Paths.ForgotPassword]: undefined;
+  [Paths.Login]: undefined;
+  [Paths.Register]: undefined;
+
+  // Waste report screens
+  [Paths.ReportDetail]: undefined;
+  [Paths.ReportHistory]: undefined;
+  [Paths.ReportWaste]: undefined;
+
+  // Gamification screens
+  [Paths.Challenges]: undefined;
+  [Paths.Leaderboard]: undefined;
+  [Paths.Rewards]: undefined;
+  [Paths.RewardShop]: undefined;
+
+  // Community screens
+  [Paths.Chatbot]: undefined;
+  [Paths.Events]: undefined;
+  [Paths.Forum]: undefined;
+
+  // Map screens
+  [Paths.MapView]: undefined;
+  [Paths.WastePoints]: undefined;
+
+  // Profile screens
+  [Paths.Help]: undefined;
+  [Paths.Profile]: undefined;
+  [Paths.Settings]: undefined;
 };
