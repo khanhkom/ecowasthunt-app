@@ -1,6 +1,7 @@
 export const enum Paths {
   // Common screens
   Home = 'home',
+  MainTabs = 'mainTabs',
   Startup = 'startup',
 
   // Auth screens

@@ -8,6 +8,7 @@ export type RootScreenProps<
 export type RootStackParamList = {
   // Common screens
   [Paths.Home]: undefined;
+  [Paths.MainTabs]: undefined;
   [Paths.Startup]: undefined;
 
   // Auth screens

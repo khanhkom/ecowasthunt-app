@@ -7,6 +7,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Paths } from '@/navigation/paths';
 import { useTheme } from '@/theme';
 
+import TabNavigator from './TabNavigator';
+
 // Import all screens
 import {
   // Common screens
@@ -54,7 +56,7 @@ function ApplicationNavigator() {
   return (
     <SafeAreaProvider>
       <NavigationContainer ref={navigationReference} theme={navigationTheme}>
-        <Stack.Navigator initialRouteName={Paths.Login} key={variant} screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName={Paths.MainTabs} key={variant} screenOptions={{ headerShown: false }}>
           {/* Auth screens */}
           <Stack.Screen component={Login} name={Paths.Login} />
           <Stack.Screen component={Register} name={Paths.Register} />
@@ -62,6 +64,7 @@ function ApplicationNavigator() {
 
           {/* Common screens */}
           <Stack.Screen component={Startup} name={Paths.Startup} />
+          <Stack.Screen component={TabNavigator} name={Paths.MainTabs} />
           <Stack.Screen component={Home} name={Paths.Home} />
 
           {/* Waste report screens */}
