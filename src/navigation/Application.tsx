@@ -9,6 +9,8 @@ import { useTheme } from '@/theme';
 
 import { Example, Startup } from '@/screens';
 
+import { navigationReference } from './navigationService';
+
 const Stack = createStackNavigator<RootStackParamList>();
 
 function ApplicationNavigator() {
@@ -16,7 +18,7 @@ function ApplicationNavigator() {
 
   return (
     <SafeAreaProvider>
-      <NavigationContainer theme={navigationTheme}>
+      <NavigationContainer ref={navigationReference} theme={navigationTheme}>
         <Stack.Navigator key={variant} screenOptions={{ headerShown: false }}>
           <Stack.Screen component={Startup} name={Paths.Startup} />
           <Stack.Screen component={Example} name={Paths.Example} />
