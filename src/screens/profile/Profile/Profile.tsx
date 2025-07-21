@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import {
     Dimensions,
     Image,
+    Platform,
     ScrollView,
     StatusBar,
     StyleSheet,
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingBottom: 20,
         paddingHorizontal: 20,
-        paddingTop: 20,
+        paddingTop: Platform.OS === 'ios' ? 40 : 20,
     },
     headerTitle: {
         color: '#1F2937',
