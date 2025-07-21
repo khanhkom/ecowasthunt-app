@@ -17,25 +17,64 @@ import {
     ClockIcon,
     EyeIcon,
     FireIcon,
-    HandThumbUpIcon,
     HeartIcon,
     MagnifyingGlassIcon,
     MapPinIcon,
     PlusIcon,
     ShareIcon,
-    StarIcon,
     TrophyIcon,
     UserGroupIcon,
 } from 'react-native-heroicons/outline';
 import {
     BookmarkIcon as BookmarkSolidIcon,
     HeartIcon as HeartSolidIcon,
-    HandThumbUpIcon as ThumbUpSolidIcon,
 } from 'react-native-heroicons/solid';
 
 const { width } = Dimensions.get('window');
 
-// Mock data
+// Types
+type Category = {
+    active: boolean;
+    count: number;
+    id: number;
+    name: string;
+}
+
+type LeaderboardUser = {
+    avatar: string;
+    badge: string;
+    id: number;
+    name: string;
+    points: number;
+    posts: number;
+    rank: number;
+}
+
+type Post = {
+    bookmarked: boolean;
+    category: string;
+    comments: number;
+    content: string;
+    id: number;
+    images: string[];
+    liked: boolean;
+    likes: number;
+    location?: string;
+    shares: number;
+    tags: string[];
+    timestamp: string;
+    user: User;
+    views: number;
+}
+
+type User = {
+    avatar: string;
+    badge: string;
+    name: string;
+    verified: boolean;
+}
+
+// Mock Data
 const communityStats = {
     todayPosts: 89,
     topContributor: 'EcoMaster2024',
@@ -43,7 +82,7 @@ const communityStats = {
     weeklyActive: 3421,
 };
 
-const categories = [
+const categories: Category[] = [
     { active: true, count: 245, id: 1, name: 'Tất cả' },
     { active: false, count: 67, id: 2, name: 'Mẹo hay' },
     { active: false, count: 43, id: 3, name: 'Thắc mắc' },
@@ -58,37 +97,25 @@ const trendingTopics = [
     { id: 4, posts: 98, title: '#ThửThách7Ngày' },
 ];
 
-const leaderboard = [
+const leaderboard: LeaderboardUser[] = [
     {
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face',
-        badge: 'Eco Hero',
-        id: 1,
-        name: 'EcoMaster2024',
+        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face', badge: 'Eco Hero', id: 1, name: 'EcoMaster2024',
         points: 15_420,
-        posts: 89,
-        rank: 1,
+        posts: 89, rank: 1,
     },
     {
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b05b?w=50&h=50&fit=crop&crop=face',
-        badge: 'Champion',
-        id: 2,
-        name: 'GreenWarrior',
+        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b05b?w=50&h=50&fit=crop&crop=face', badge: 'Champion', id: 2, name: 'GreenWarrior',
         points: 14_230,
-        posts: 76,
-        rank: 2,
+        posts: 76, rank: 2,
     },
     {
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face',
-        badge: 'Expert',
-        id: 3,
-        name: 'RecycleQueen',
+        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face', badge: 'Expert', id: 3, name: 'RecycleQueen',
         points: 13_890,
-        posts: 82,
-        rank: 3,
+        posts: 82, rank: 3,
     },
 ];
 
-const posts = [
+const posts: Post[] = [
     {
         bookmarked: true,
         category: 'Mẹo hay',
@@ -101,17 +128,13 @@ const posts = [
         ],
         liked: false,
         likes: 124,
-        location: 'Quận 1, TP.HCM',
-        shares: 8,
-        tags: ['#PhânLoạiNhựa', '#MẹoHay', '#TáiChế'],
-        timestamp: '2 giờ trước',
+        location: 'Quận 1, TP.HCM', shares: 8, tags: ['#PhânLoạiNhựa', '#MẹoHay', '#TáiChế'], timestamp: '2 giờ trước',
         user: {
             avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b05b?w=50&h=50&fit=crop&crop=face',
             badge: 'Eco Expert',
             name: 'Nguyễn Thị Mai',
             verified: true,
-        },
-        views: 567,
+        }, views: 567,
     },
     {
         bookmarked: false,
@@ -119,22 +142,16 @@ const posts = [
         comments: 45,
         content: 'Tổ chức cleanup tại bãi biển Vũng Tàu cuối tuần này! Ai muốn tham gia thì comment bên dưới nhé. Mình sẽ chuẩn bị găng tay và túi rác cho mọi người 🏖️🗑️',
         id: 2,
-        images: [
-            'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=200&fit=crop',
-        ],
+        images: ['https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=300&h=200&fit=crop'],
         liked: true,
         likes: 89,
-        location: 'Vũng Tàu',
-        shares: 12,
-        tags: ['#Cleanup', '#VũngTàu', '#BảoVệMôiTrường'],
-        timestamp: '4 giờ trước',
+        location: 'Vũng Tàu', shares: 12, tags: ['#Cleanup', '#VũngTàu', '#BảoVệMôiTrường'], timestamp: '4 giờ trước',
         user: {
             avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=50&h=50&fit=crop&crop=face',
             badge: 'Green Warrior',
             name: 'Trần Văn Hùng',
             verified: false,
-        },
-        views: 234,
+        }, views: 234,
     },
     {
         bookmarked: false,
@@ -145,17 +162,13 @@ const posts = [
         images: [],
         liked: false,
         likes: 34,
-        location: 'Hà Nội',
-        shares: 3,
-        tags: ['#ThắcMắc', '#Pin', '#PhânLoại'],
-        timestamp: '6 giờ trước',
+        location: 'Hà Nội', shares: 3, tags: ['#ThắcMắc', '#Pin', '#PhânLoại'], timestamp: '6 giờ trước',
         user: {
             avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=50&h=50&fit=crop&crop=face',
             badge: 'Beginner',
             name: 'Lê Thị Hoa',
             verified: false,
-        },
-        views: 156,
+        }, views: 156,
     },
 ];
 
@@ -164,23 +177,70 @@ function CommunityScreen() {
     const [searchQuery, setSearchQuery] = useState('');
     const [showLeaderboard, setShowLeaderboard] = useState(false);
 
-    const handleLike = (postId) => {
-        console.log('Like post:', postId);
+    const getRankColor = (rank: number) => {
+        const colors = { 1: '#F59E0B', 2: '#94A3B8', 3: '#CD7C2F' };
+        return colors[rank as keyof typeof colors] || '#6B7280';
     };
 
-    const handleComment = (postId) => {
-        console.log('Comment on post:', postId);
+    const handlePostAction = (action: string, postId: number) => {
+        console.log(`${action} post:`, postId);
     };
 
-    const handleShare = (postId) => {
-        console.log('Share post:', postId);
-    };
+    const renderHeader = () => (
+        <View style={styles.header}>
+            <Text style={styles.headerTitle}>Cộng đồng</Text>
+            <View style={styles.headerActions}>
+                <TouchableOpacity
+                    onPress={() => { setShowLeaderboard(!showLeaderboard); }}
+                    style={styles.headerButton}
+                >
+                    <TrophyIcon color="#1F2937" size={24} strokeWidth={2} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.headerButton}>
+                    <PlusIcon color="#1F2937" size={24} strokeWidth={2} />
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
-    const handleBookmark = (postId) => {
-        console.log('Bookmark post:', postId);
-    };
+    const renderCommunityStats = () => (
+        <View style={styles.statsContainer}>
+            <View style={styles.statsCard}>
+                <View style={styles.statItem}>
+                    <UserGroupIcon color="#8B5CF6" size={20} strokeWidth={2} />
+                    <Text style={styles.statNumber}>{communityStats.totalMembers.toLocaleString()}</Text>
+                    <Text style={styles.statLabel}>Thành viên</Text>
+                </View>
+                <View style={styles.statItem}>
+                    <FireIcon color="#EF4444" size={20} strokeWidth={2} />
+                    <Text style={styles.statNumber}>{communityStats.weeklyActive.toLocaleString()}</Text>
+                    <Text style={styles.statLabel}>Hoạt động/tuần</Text>
+                </View>
+                <View style={styles.statItem}>
+                    <ChatBubbleLeftIcon color="#10B981" size={20} strokeWidth={2} />
+                    <Text style={styles.statNumber}>{communityStats.todayPosts}</Text>
+                    <Text style={styles.statLabel}>Bài hôm nay</Text>
+                </View>
+            </View>
+        </View>
+    );
 
-    const renderCategory = ({ item }) => (
+    const renderSearchBar = () => (
+        <View style={styles.searchContainer}>
+            <View style={styles.searchBar}>
+                <MagnifyingGlassIcon color="#9CA3AF" size={20} strokeWidth={2} />
+                <TextInput
+                    onChangeText={setSearchQuery}
+                    placeholder="Tìm kiếm bài viết, người dùng..."
+                    placeholderTextColor="#9CA3AF"
+                    style={styles.searchInput}
+                    value={searchQuery}
+                />
+            </View>
+        </View>
+    );
+
+    const renderCategory = ({ item }: { item: Category }) => (
         <TouchableOpacity
             onPress={() => { setActiveCategory(item.id); }}
             style={[styles.categoryChip, item.active && styles.activeCategoryChip]}
@@ -194,14 +254,146 @@ function CommunityScreen() {
         </TouchableOpacity>
     );
 
-    const renderTrendingTopic = ({ item }) => (
-        <TouchableOpacity style={styles.trendingTopic}>
-            <Text style={styles.trendingTitle}>{item.title}</Text>
-            <Text style={styles.trendingCount}>{item.posts} bài viết</Text>
-        </TouchableOpacity>
+    const renderCategories = () => (
+        <View style={styles.categoriesContainer}>
+            <FlatList
+                contentContainerStyle={styles.categoriesList}
+                data={categories}
+                horizontal
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderCategory}
+                showsHorizontalScrollIndicator={false}
+            />
+        </View>
     );
 
-    const renderLeaderboardItem = ({ item }) => (
+    const renderPostHeader = (post: Post) => (
+        <View style={styles.postHeader}>
+            <View style={styles.postUserInfo}>
+                <Image source={{ uri: post.user.avatar }} style={styles.userAvatar} />
+                <View style={styles.userDetails}>
+                    <View style={styles.userNameRow}>
+                        <Text style={styles.userName}>{post.user.name}</Text>
+                        {post.user.verified ? <View style={styles.verifiedBadge}>
+                            <Text style={styles.verifiedText}>✓</Text>
+                        </View> : null}
+                    </View>
+                    <Text style={styles.userBadge}>{post.user.badge}</Text>
+                    <View style={styles.postMeta}>
+                        <ClockIcon color="#9CA3AF" size={12} strokeWidth={2} />
+                        <Text style={styles.postTime}>{post.timestamp}</Text>
+                        {post.location ? <>
+                            <Text style={styles.metaSeparator}>•</Text>
+                            <MapPinIcon color="#9CA3AF" size={12} strokeWidth={2} />
+                            <Text style={styles.postLocation}>{post.location}</Text>
+                        </> : null}
+                    </View>
+                </View>
+            </View>
+            <TouchableOpacity style={styles.moreButton}>
+                <Text style={styles.moreText}>•••</Text>
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderPostImages = (images: string[]) => {
+        if (!images || images.length === 0) return null;
+
+        return (
+            <View style={styles.imagesContainer}>
+                {images.length === 1 ? (
+                    <Image source={{ uri: images[0] }} style={styles.singleImage} />
+                ) : (
+                    <View style={styles.multipleImages}>
+                        {images.slice(0, 2).map((image, index) => (
+                            <Image key={index} source={{ uri: image }} style={styles.multiImage} />
+                        ))}
+                    </View>
+                )}
+            </View>
+        );
+    };
+
+    const renderPostActions = (post: Post) => (
+        <View style={styles.postActions}>
+            <TouchableOpacity
+                onPress={() => { handlePostAction('like', post.id); }}
+                style={styles.actionButton}
+            >
+                {post.liked ? (
+                    <HeartSolidIcon color="#EF4444" size={20} />
+                ) : (
+                    <HeartIcon color="#6B7280" size={20} strokeWidth={2} />
+                )}
+                <Text style={[styles.actionText, post.liked && styles.likedText]}>
+                    Thích
+                </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                onPress={() => { handlePostAction('comment', post.id); }}
+                style={styles.actionButton}
+            >
+                <ChatBubbleLeftIcon color="#6B7280" size={20} strokeWidth={2} />
+                <Text style={styles.actionText}>Bình luận</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                onPress={() => { handlePostAction('share', post.id); }}
+                style={styles.actionButton}
+            >
+                <ShareIcon color="#6B7280" size={20} strokeWidth={2} />
+                <Text style={styles.actionText}>Chia sẻ</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                onPress={() => { handlePostAction('bookmark', post.id); }}
+                style={styles.actionButton}
+            >
+                {post.bookmarked ? (
+                    <BookmarkSolidIcon color="#8B5CF6" size={20} />
+                ) : (
+                    <BookmarkIcon color="#6B7280" size={20} strokeWidth={2} />
+                )}
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderPost = ({ item }: { item: Post }) => (
+        <View style={styles.postCard}>
+            {renderPostHeader(item)}
+
+            <Text style={styles.postContent}>{item.content}</Text>
+
+            {/* Tags */}
+            <View style={styles.tagsContainer}>
+                {item.tags.map((tag, index) => (
+                    <TouchableOpacity key={index} style={styles.tag}>
+                        <Text style={styles.tagText}>{tag}</Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
+
+            {renderPostImages(item.images)}
+
+            {/* Stats */}
+            <View style={styles.postStats}>
+                <View style={styles.statsLeft}>
+                    <EyeIcon color="#9CA3AF" size={14} strokeWidth={2} />
+                    <Text style={styles.statsText}>{item.views}</Text>
+                </View>
+                <View style={styles.statsRight}>
+                    <Text style={styles.statsText}>{item.likes} lượt thích</Text>
+                    <Text style={styles.statsSeparator}>•</Text>
+                    <Text style={styles.statsText}>{item.comments} bình luận</Text>
+                </View>
+            </View>
+
+            {renderPostActions(item)}
+        </View>
+    );
+
+    const renderLeaderboardItem = ({ item }: { item: LeaderboardUser }) => (
         <View style={styles.leaderboardItem}>
             <View style={styles.leaderboardLeft}>
                 <View style={[styles.rankBadge, { backgroundColor: getRankColor(item.rank) }]}>
@@ -220,238 +412,58 @@ function CommunityScreen() {
         </View>
     );
 
-    const getRankColor = (rank) => {
-        switch (rank) {
-            case 1: {
-                return '#F59E0B';
-            }
-            case 2: {
-                return '#94A3B8';
-            }
-            case 3: {
-                return '#CD7C2F';
-            }
-            default: {
-                return '#6B7280';
-            }
-        }
-    };
-
-    const renderPost = ({ item }) => (
-        <View style={styles.postCard}>
-            {/* Post Header */}
-            <View style={styles.postHeader}>
-                <View style={styles.postUserInfo}>
-                    <Image source={{ uri: item.user.avatar }} style={styles.userAvatar} />
-                    <View style={styles.userDetails}>
-                        <View style={styles.userNameRow}>
-                            <Text style={styles.userName}>{item.user.name}</Text>
-                            {item.user.verified ? <View style={styles.verifiedBadge}>
-                                <Text style={styles.verifiedText}>✓</Text>
-                            </View> : null}
-                        </View>
-                        <Text style={styles.userBadge}>{item.user.badge}</Text>
-                        <View style={styles.postMeta}>
-                            <ClockIcon color="#9CA3AF" size={12} strokeWidth={2} />
-                            <Text style={styles.postTime}>{item.timestamp}</Text>
-                            {item.location ? <>
-                                <Text style={styles.metaSeparator}>•</Text>
-                                <MapPinIcon color="#9CA3AF" size={12} strokeWidth={2} />
-                                <Text style={styles.postLocation}>{item.location}</Text>
-                            </> : null}
-                        </View>
-                    </View>
-                </View>
-                <TouchableOpacity style={styles.moreButton}>
-                    <Text style={styles.moreText}>•••</Text>
-                </TouchableOpacity>
-            </View>
-
-            {/* Post Content */}
-            <Text style={styles.postContent}>{item.content}</Text>
-
-            {/* Post Tags */}
-            <View style={styles.tagsContainer}>
-                {item.tags.map((tag, index) => (
-                    <TouchableOpacity key={index} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                    </TouchableOpacity>
-                ))}
-            </View>
-
-            {/* Post Images */}
-            {item.images && item.images.length > 0 ? <View style={styles.imagesContainer}>
-                {item.images.length === 1 ? (
-                    <Image source={{ uri: item.images[0] }} style={styles.singleImage} />
-                ) : (
-                    <View style={styles.multipleImages}>
-                        {item.images.slice(0, 2).map((image, index) => (
-                            <Image key={index} source={{ uri: image }} style={styles.multiImage} />
-                        ))}
-                    </View>
-                )}
-            </View> : null}
-
-            {/* Post Stats */}
-            <View style={styles.postStats}>
-                <View style={styles.statsLeft}>
-                    <EyeIcon color="#9CA3AF" size={14} strokeWidth={2} />
-                    <Text style={styles.statsText}>{item.views}</Text>
-                </View>
-                <View style={styles.statsRight}>
-                    <Text style={styles.statsText}>{item.likes} lượt thích</Text>
-                    <Text style={styles.statsSeparator}>•</Text>
-                    <Text style={styles.statsText}>{item.comments} bình luận</Text>
-                </View>
-            </View>
-
-            {/* Post Actions */}
-            <View style={styles.postActions}>
-                <TouchableOpacity
-                    onPress={() => { handleLike(item.id); }}
-                    style={styles.actionButton}
-                >
-                    {item.liked ? (
-                        <HeartSolidIcon color="#EF4444" size={20} />
-                    ) : (
-                        <HeartIcon color="#6B7280" size={20} strokeWidth={2} />
-                    )}
-                    <Text style={[styles.actionText, item.liked && styles.likedText]}>
-                        Thích
-                    </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => { handleComment(item.id); }}
-                    style={styles.actionButton}
-                >
-                    <ChatBubbleLeftIcon color="#6B7280" size={20} strokeWidth={2} />
-                    <Text style={styles.actionText}>Bình luận</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => { handleShare(item.id); }}
-                    style={styles.actionButton}
-                >
-                    <ShareIcon color="#6B7280" size={20} strokeWidth={2} />
-                    <Text style={styles.actionText}>Chia sẻ</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                    onPress={() => { handleBookmark(item.id); }}
-                    style={styles.actionButton}
-                >
-                    {item.bookmarked ? (
-                        <BookmarkSolidIcon color="#8B5CF6" size={20} />
-                    ) : (
-                        <BookmarkIcon color="#6B7280" size={20} strokeWidth={2} />
-                    )}
-                </TouchableOpacity>
-            </View>
-        </View>
+    const renderTrendingTopic = ({ item }: { item: typeof trendingTopics[0] }) => (
+        <TouchableOpacity style={styles.trendingTopic}>
+            <Text style={styles.trendingTitle}>{item.title}</Text>
+            <Text style={styles.trendingCount}>{item.posts} bài viết</Text>
+        </TouchableOpacity>
     );
 
-    return (
-        <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Cộng đồng</Text>
-                <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        onPress={() => { setShowLeaderboard(!showLeaderboard); }}
-                        style={styles.headerButton}
-                    >
-                        <TrophyIcon color="#1F2937" size={24} strokeWidth={2} />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.headerButton}>
-                        <PlusIcon color="#1F2937" size={24} strokeWidth={2} />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            {/* Community Stats */}
-            <View style={styles.statsContainer}>
-                <View style={styles.statsCard}>
-                    <View style={styles.statItem}>
-                        <UserGroupIcon color="#8B5CF6" size={20} strokeWidth={2} />
-                        <Text style={styles.statNumber}>{communityStats.totalMembers.toLocaleString()}</Text>
-                        <Text style={styles.statLabel}>Thành viên</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <FireIcon color="#EF4444" size={20} strokeWidth={2} />
-                        <Text style={styles.statNumber}>{communityStats.weeklyActive.toLocaleString()}</Text>
-                        <Text style={styles.statLabel}>Hoạt động/tuần</Text>
-                    </View>
-                    <View style={styles.statItem}>
-                        <ChatBubbleLeftIcon color="#10B981" size={20} strokeWidth={2} />
-                        <Text style={styles.statNumber}>{communityStats.todayPosts}</Text>
-                        <Text style={styles.statLabel}>Bài hôm nay</Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Search Bar */}
-            <View style={styles.searchContainer}>
-                <View style={styles.searchBar}>
-                    <MagnifyingGlassIcon color="#9CA3AF" size={20} strokeWidth={2} />
-                    <TextInput
-                        onChangeText={setSearchQuery}
-                        placeholder="Tìm kiếm bài viết, người dùng..."
-                        placeholderTextColor="#9CA3AF"
-                        style={styles.searchInput}
-                        value={searchQuery}
+    const renderLeaderboard = () => (
+        <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>🏆 Bảng xếp hạng tuần này</Text>
+                <View style={styles.leaderboardContainer}>
+                    <FlatList
+                        data={leaderboard}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={renderLeaderboardItem}
+                        scrollEnabled={false}
                     />
                 </View>
             </View>
 
-            {/* Categories */}
-            <View style={styles.categoriesContainer}>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>🔥 Chủ đề thịnh hành</Text>
                 <FlatList
-                    contentContainerStyle={styles.categoriesList}
-                    data={categories}
-                    horizontal
+                    data={trendingTopics}
                     keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderCategory}
-                    showsHorizontalScrollIndicator={false}
+                    renderItem={renderTrendingTopic}
+                    scrollEnabled={false}
                 />
             </View>
+        </ScrollView>
+    );
 
-            {showLeaderboard ? (
-                /* Leaderboard */
-                <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>🏆 Bảng xếp hạng tuần này</Text>
-                        <View style={styles.leaderboardContainer}>
-                            <FlatList
-                                data={leaderboard}
-                                keyExtractor={(item) => item.id.toString()}
-                                renderItem={renderLeaderboardItem}
-                                scrollEnabled={false}
-                            />
-                        </View>
-                    </View>
+    const renderPostsFeed = () => (
+        <FlatList
+            contentContainerStyle={styles.postsContainer}
+            data={posts}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderPost}
+            showsVerticalScrollIndicator={false}
+            style={styles.content}
+        />
+    );
 
-                    <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>🔥 Chủ đề thịnh hành</Text>
-                        <FlatList
-                            data={trendingTopics}
-                            keyExtractor={(item) => item.id.toString()}
-                            renderItem={renderTrendingTopic}
-                            scrollEnabled={false}
-                        />
-                    </View>
-                </ScrollView>
-            ) : (
-                /* Posts Feed */
-                <FlatList
-                    contentContainerStyle={styles.postsContainer}
-                    data={posts}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderPost}
-                    showsVerticalScrollIndicator={false}
-                    style={styles.content}
-                />
-            )}
+    return (
+        <View style={styles.container}>
+            {renderHeader()}
+            {renderCommunityStats()}
+            {renderSearchBar()}
+            {renderCategories()}
+
+            {showLeaderboard ? renderLeaderboard() : renderPostsFeed()}
         </View>
     );
 }

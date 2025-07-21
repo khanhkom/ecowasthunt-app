@@ -32,8 +32,46 @@ import {
 
 const { height, width } = Dimensions.get('window');
 
-// Mock AI classification results
-const mockClassificationResults = [
+// Types
+type CameraScreenProps = {
+    readonly navigation: {
+        goBack: () => void;
+    };
+}
+
+type CapturedImage = {
+    fromGallery?: boolean;
+    id: number;
+    timestamp: string;
+    uri: string;
+}
+
+type ClassificationResult = {
+    binType: string;
+    category: string;
+    color: string;
+    confidence: number;
+    description: string;
+    icon: string;
+    id: number;
+    recyclable: boolean;
+    tips: string;
+}
+
+type FlashMode = {
+    icon: any;
+    id: 'auto' | 'off' | 'on';
+    label: string;
+}
+
+// Constants
+const FLASH_MODES: FlashMode[] = [
+    { icon: BoltIcon, id: 'off', label: 'Tắt' },
+    { icon: FlashSolidIcon, id: 'on', label: 'Bật' },
+    { icon: BoltIcon, id: 'auto', label: 'Tự động' },
+];
+
+const MOCK_CLASSIFICATION_RESULTS: ClassificationResult[] = [
     {
         binType: 'Thùng xanh - Tái chế',
         category: 'Nhựa PET',
@@ -69,28 +107,29 @@ const mockClassificationResults = [
     },
 ];
 
-const flashModes = [
-    { icon: BoltIcon, id: 'off', label: 'Tắt' },
-    { icon: FlashSolidIcon, id: 'on', label: 'Bật' },
-    { icon: BoltIcon, id: 'auto', label: 'Tự động' },
+const CAMERA_TIPS = [
+    { icon: '💡', text: 'Chụp từ nhiều góc độ khác nhau' },
+    { icon: '🔍', text: 'Đảm bảo vật thể nằm giữa khung hình' },
+    { icon: '☀️', text: 'Chụp ở nơi có ánh sáng tự nhiên' },
+    { icon: '🧽', text: 'Làm sạch vật thể trước khi chụp' },
+    { icon: '📏', text: 'Chụp cận cảnh để thấy rõ chi tiết' },
 ];
 
-function CameraScreen({ navigation }) {
-    const [capturedImages, setCapturedImages] = useState([]);
+function CameraScreen({ navigation }: CameraScreenProps) {
+    const [capturedImages, setCapturedImages] = useState<CapturedImage[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [showResults, setShowResults] = useState(false);
-    const [classificationResults, setClassificationResults] = useState([]);
-    const [flashMode, setFlashMode] = useState('off');
-    const [cameraFacing, setCameraFacing] = useState('back');
+    const [classificationResults, setClassificationResults] = useState<ClassificationResult[]>([]);
+    const [flashMode, setFlashMode] = useState<'auto' | 'off' | 'on'>('off');
+    const [cameraFacing, setCameraFacing] = useState<'back' | 'front'>('back');
     const [showPreview, setShowPreview] = useState(false);
-    const [selectedImage, setSelectedImage] = useState(null);
+    const [selectedImage, setSelectedImage] = useState<CapturedImage | null>(null);
     const [showTips, setShowTips] = useState(false);
 
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        // Animation for processing indicator
         if (isProcessing) {
             Animated.loop(
                 Animated.sequence([
@@ -109,16 +148,17 @@ function CameraScreen({ navigation }) {
         } else {
             fadeAnim.setValue(0);
         }
-    }, [isProcessing]);
+    }, [isProcessing, fadeAnim]);
+
+    const generateMockImage = (fromGallery = false): CapturedImage => ({
+        fromGallery,
+        id: Date.now(),
+        timestamp: new Date().toISOString(),
+        uri: `https://images.unsplash.com/photo-${fromGallery ? '1567306301408-9b74779a11af' : '1558618666-fcd25c85cd64'}?w=300&h=400&fit=crop&t=${Date.now()}`,
+    });
 
     const simulateImageCapture = () => {
-        // Simulate camera capture
-        const newImage = {
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            uri: `https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=300&h=400&fit=crop&t=${Date.now()}`,
-        };
-
+        const newImage = generateMockImage();
         setCapturedImages(previous => [...previous, newImage]);
 
         // Animate capture button
@@ -136,8 +176,23 @@ function CameraScreen({ navigation }) {
         ]).start();
     };
 
-    const removeImage = (imageId) => {
+    const removeImage = (imageId: number) => {
         setCapturedImages(previous => previous.filter(img => img.id !== imageId));
+    };
+
+    const openGallery = () => {
+        const galleryImage = generateMockImage(true);
+        setCapturedImages(previous => [...previous, galleryImage]);
+    };
+
+    const toggleFlashMode = () => {
+        const currentIndex = FLASH_MODES.findIndex(mode => mode.id === flashMode);
+        const nextIndex = (currentIndex + 1) % FLASH_MODES.length;
+        setFlashMode(FLASH_MODES[nextIndex].id);
+    };
+
+    const toggleCameraFacing = () => {
+        setCameraFacing(previous => previous === 'back' ? 'front' : 'back');
     };
 
     const processImages = async () => {
@@ -150,7 +205,7 @@ function CameraScreen({ navigation }) {
 
         // Simulate AI processing
         setTimeout(() => {
-            setClassificationResults(mockClassificationResults.slice(0, capturedImages.length));
+            setClassificationResults(MOCK_CLASSIFICATION_RESULTS.slice(0, capturedImages.length));
             setIsProcessing(false);
             setShowResults(true);
         }, 3000);
@@ -162,46 +217,39 @@ function CameraScreen({ navigation }) {
         setClassificationResults([]);
     };
 
-    const openGallery = () => {
-        // Simulate gallery selection
-        const galleryImage = {
-            fromGallery: true,
-            id: Date.now(),
-            timestamp: new Date().toISOString(),
-            uri: `https://images.unsplash.com/photo-1567306301408-9b74779a11af?w=300&h=400&fit=crop&t=${Date.now()}`,
-        };
-        setCapturedImages(previous => [...previous, galleryImage]);
+    const openImagePreview = (image: CapturedImage) => {
+        setSelectedImage(image);
+        setShowPreview(true);
     };
+
+    const renderCameraViewfinder = () => (
+        <View style={styles.cameraViewfinder}>
+            <Text style={styles.viewfinderText}>📷 Camera AI</Text>
+            <Text style={styles.viewfinderSubtext}>Chụp ảnh rác để phân loại</Text>
+
+            {/* Camera Frame Overlay */}
+            <View style={styles.cameraFrame}>
+                <View style={[styles.frameCorner, styles.topLeft]} />
+                <View style={[styles.frameCorner, styles.topRight]} />
+                <View style={[styles.frameCorner, styles.bottomLeft]} />
+                <View style={[styles.frameCorner, styles.bottomRight]} />
+            </View>
+        </View>
+    );
 
     const renderCameraControls = () => (
         <View style={styles.cameraControls}>
-            {/* Flash Control */}
-            <TouchableOpacity
-                onPress={() => {
-                    const currentIndex = flashModes.findIndex(mode => mode.id === flashMode);
-                    const nextIndex = (currentIndex + 1) % flashModes.length;
-                    setFlashMode(flashModes[nextIndex].id);
-                }}
-                style={styles.controlButton}
-            >
+            <TouchableOpacity onPress={toggleFlashMode} style={styles.controlButton}>
                 {flashMode === 'off' && <BoltIcon color="#fff" size={24} strokeWidth={2} />}
                 {flashMode === 'on' && <FlashSolidIcon color="#F59E0B" size={24} />}
                 {flashMode === 'auto' && <BoltIcon color="#8B5CF6" size={24} strokeWidth={2} />}
             </TouchableOpacity>
 
-            {/* Camera Flip */}
-            <TouchableOpacity
-                onPress={() => { setCameraFacing(cameraFacing === 'back' ? 'front' : 'back'); }}
-                style={styles.controlButton}
-            >
+            <TouchableOpacity onPress={toggleCameraFacing} style={styles.controlButton}>
                 <ArrowPathIcon color="#fff" size={24} strokeWidth={2} />
             </TouchableOpacity>
 
-            {/* Tips */}
-            <TouchableOpacity
-                onPress={() => { setShowTips(true); }}
-                style={styles.controlButton}
-            >
+            <TouchableOpacity onPress={() => { setShowTips(true); }} style={styles.controlButton}>
                 <InformationCircleIcon color="#fff" size={24} strokeWidth={2} />
             </TouchableOpacity>
         </View>
@@ -209,12 +257,10 @@ function CameraScreen({ navigation }) {
 
     const renderCaptureArea = () => (
         <View style={styles.captureArea}>
-            {/* Gallery Button */}
             <TouchableOpacity onPress={openGallery} style={styles.galleryButton}>
                 <PhotoIcon color="#fff" size={24} strokeWidth={2} />
             </TouchableOpacity>
 
-            {/* Capture Button */}
             <Animated.View style={[styles.captureButtonContainer, { transform: [{ scale: scaleAnim }] }]}>
                 <TouchableOpacity
                     disabled={isProcessing}
@@ -227,7 +273,6 @@ function CameraScreen({ navigation }) {
                 </TouchableOpacity>
             </Animated.View>
 
-            {/* Process Button */}
             <TouchableOpacity
                 disabled={isProcessing || capturedImages.length === 0}
                 onPress={processImages}
@@ -242,39 +287,48 @@ function CameraScreen({ navigation }) {
         </View>
     );
 
-    const renderImageThumbnails = () => (
-        <View style={styles.thumbnailContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                {capturedImages.map((image, index) => (
-                    <View key={image.id} style={styles.thumbnail}>
-                        <TouchableOpacity
-                            onPress={() => {
-                                setSelectedImage(image);
-                                setShowPreview(true);
-                            }}
-                        >
-                            <Image source={{ uri: image.uri }} style={styles.thumbnailImage} />
-                            {image.fromGallery ? <View style={styles.galleryBadge}>
-                                <PhotoIcon color="#fff" size={12} strokeWidth={2} />
-                            </View> : null}
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => { removeImage(image.id); }}
-                            style={styles.removeButton}
-                        >
-                            <XMarkIcon color="#fff" size={16} strokeWidth={2} />
-                        </TouchableOpacity>
-                        <Text style={styles.thumbnailIndex}>{index + 1}</Text>
-                    </View>
-                ))}
+    const renderImageThumbnails = () => {
+        if (capturedImages.length === 0) return null;
 
-                {capturedImages.length > 0 && capturedImages.length < 5 && (
-                    <TouchableOpacity onPress={simulateImageCapture} style={styles.addMoreButton}>
-                        <PlusIcon color="#8B5CF6" size={24} strokeWidth={2} />
-                        <Text style={styles.addMoreText}>Thêm ảnh</Text>
-                    </TouchableOpacity>
-                )}
-            </ScrollView>
+        return (
+            <View style={styles.thumbnailContainer}>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {capturedImages.map((image, index) => (
+                        <View key={image.id} style={styles.thumbnail}>
+                            <TouchableOpacity onPress={() => { openImagePreview(image); }}>
+                                <Image source={{ uri: image.uri }} style={styles.thumbnailImage} />
+                                {image.fromGallery ? <View style={styles.galleryBadge}>
+                                    <PhotoIcon color="#fff" size={12} strokeWidth={2} />
+                                </View> : null}
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => { removeImage(image.id); }}
+                                style={styles.removeButton}
+                            >
+                                <XMarkIcon color="#fff" size={16} strokeWidth={2} />
+                            </TouchableOpacity>
+
+                            <Text style={styles.thumbnailIndex}>{index + 1}</Text>
+                        </View>
+                    ))}
+
+                    {capturedImages.length < 5 && (
+                        <TouchableOpacity onPress={simulateImageCapture} style={styles.addMoreButton}>
+                            <PlusIcon color="#8B5CF6" size={24} strokeWidth={2} />
+                            <Text style={styles.addMoreText}>Thêm ảnh</Text>
+                        </TouchableOpacity>
+                    )}
+                </ScrollView>
+            </View>
+        );
+    };
+
+    const renderStatusBar = () => (
+        <View style={styles.statusBar}>
+            <Text style={styles.statusText}>
+                {capturedImages.length}/5 ảnh • Chụp nhiều góc độ để kết quả chính xác hơn
+            </Text>
         </View>
     );
 
@@ -293,10 +347,59 @@ function CameraScreen({ navigation }) {
         </Modal>
     );
 
+    const renderResultsSummary = () => {
+        const recyclableCount = classificationResults.filter(r => r.recyclable).length;
+        const nonRecyclableCount = classificationResults.filter(r => !r.recyclable).length;
+
+        return (
+            <View style={styles.resultsSummary}>
+                <View style={styles.summaryItem}>
+                    <CheckCircleIcon color="#10B981" size={20} />
+                    <Text style={styles.summaryText}>{recyclableCount} có thể tái chế</Text>
+                </View>
+                <View style={styles.summaryItem}>
+                    <ExclamationTriangleIcon color="#F59E0B" size={20} strokeWidth={2} />
+                    <Text style={styles.summaryText}>{nonRecyclableCount} không tái chế</Text>
+                </View>
+            </View>
+        );
+    };
+
+    const renderResultCard = (result: ClassificationResult, index: number) => (
+        <View key={result.id} style={styles.resultCard}>
+            <View style={styles.resultHeader}>
+                <View style={styles.resultImageContainer}>
+                    <Image source={{ uri: capturedImages[index]?.uri }} style={styles.resultImage} />
+                    <View style={[styles.confidenceBadge, { backgroundColor: result.color }]}>
+                        <Text style={styles.confidenceText}>{result.confidence}%</Text>
+                    </View>
+                </View>
+
+                <View style={styles.resultInfo}>
+                    <View style={styles.resultTitleRow}>
+                        <Text style={styles.resultIcon}>{result.icon}</Text>
+                        <Text style={styles.resultCategory}>{result.category}</Text>
+                        {result.recyclable ? <CheckCircleIcon color="#10B981" size={16} /> : null}
+                    </View>
+                    <Text style={styles.resultDescription}>{result.description}</Text>
+                    <View style={[styles.binTypeChip, { backgroundColor: `${result.color}20` }]}>
+                        <Text style={[styles.binTypeText, { color: result.color }]}>
+                            {result.binType}
+                        </Text>
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.tipsContainer}>
+                <Text style={styles.tipsTitle}>💡 Mẹo xử lý:</Text>
+                <Text style={styles.tipsText}>{result.tips}</Text>
+            </View>
+        </View>
+    );
+
     const renderClassificationResults = () => (
         <Modal animationType="slide" visible={showResults}>
             <View style={styles.resultsContainer}>
-                {/* Results Header */}
                 <View style={styles.resultsHeader}>
                     <Text style={styles.resultsTitle}>Kết quả phân loại</Text>
                     <TouchableOpacity
@@ -308,67 +411,22 @@ function CameraScreen({ navigation }) {
                 </View>
 
                 <ScrollView showsVerticalScrollIndicator={false} style={styles.resultsContent}>
-                    {/* Summary */}
-                    <View style={styles.resultsSummary}>
-                        <View style={styles.summaryItem}>
-                            <CheckCircleIcon color="#10B981" size={20} />
-                            <Text style={styles.summaryText}>
-                                {classificationResults.filter(r => r.recyclable).length} có thể tái chế
-                            </Text>
-                        </View>
-                        <View style={styles.summaryItem}>
-                            <ExclamationTriangleIcon color="#F59E0B" size={20} strokeWidth={2} />
-                            <Text style={styles.summaryText}>
-                                {classificationResults.filter(r => !r.recyclable).length} không tái chế
-                            </Text>
-                        </View>
-                    </View>
+                    {renderResultsSummary()}
+                    {classificationResults.map(renderResultCard)}
 
-                    {/* Classification Results */}
-                    {classificationResults.map((result, index) => (
-                        <View key={result.id} style={styles.resultCard}>
-                            <View style={styles.resultHeader}>
-                                <View style={styles.resultImageContainer}>
-                                    <Image source={{ uri: capturedImages[index]?.uri }} style={styles.resultImage} />
-                                    <View style={[styles.confidenceBadge, { backgroundColor: result.color }]}>
-                                        <Text style={styles.confidenceText}>{result.confidence}%</Text>
-                                    </View>
-                                </View>
-
-                                <View style={styles.resultInfo}>
-                                    <View style={styles.resultTitleRow}>
-                                        <Text style={styles.resultIcon}>{result.icon}</Text>
-                                        <Text style={styles.resultCategory}>{result.category}</Text>
-                                        {result.recyclable ? <CheckCircleIcon color="#10B981" size={16} /> : null}
-                                    </View>
-                                    <Text style={styles.resultDescription}>{result.description}</Text>
-                                    <View style={[styles.binTypeChip, { backgroundColor: `${result.color}20` }]}>
-                                        <Text style={[styles.binTypeText, { color: result.color }]}>
-                                            {result.binType}
-                                        </Text>
-                                    </View>
-                                </View>
-                            </View>
-
-                            {/* Tips */}
-                            <View style={styles.tipsContainer}>
-                                <Text style={styles.tipsTitle}>💡 Mẹo xử lý:</Text>
-                                <Text style={styles.tipsText}>{result.tips}</Text>
-                            </View>
-                        </View>
-                    ))}
-
-                    {/* Action Buttons */}
                     <View style={styles.resultActions}>
                         <TouchableOpacity onPress={retakePhotos} style={styles.retakeButton}>
                             <CameraIcon color="#6B7280" size={20} strokeWidth={2} />
                             <Text style={styles.retakeButtonText}>Chụp lại</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity onPress={() => {
-                            setShowResults(false);
-                            navigation.goBack();
-                        }} style={styles.saveButton}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                setShowResults(false);
+                                navigation.goBack();
+                            }}
+                            style={styles.saveButton}
+                        >
                             <CheckIcon color="#fff" size={20} strokeWidth={2} />
                             <Text style={styles.saveButtonText}>Lưu kết quả</Text>
                         </TouchableOpacity>
@@ -410,26 +468,12 @@ function CameraScreen({ navigation }) {
                     </View>
 
                     <ScrollView style={styles.tipsModalContent}>
-                        <View style={styles.tipItem}>
-                            <Text style={styles.tipIcon}>💡</Text>
-                            <Text style={styles.tipText}>Chụp từ nhiều góc độ khác nhau</Text>
-                        </View>
-                        <View style={styles.tipItem}>
-                            <Text style={styles.tipIcon}>🔍</Text>
-                            <Text style={styles.tipText}>Đảm bảo vật thể nằm giữa khung hình</Text>
-                        </View>
-                        <View style={styles.tipItem}>
-                            <Text style={styles.tipIcon}>☀️</Text>
-                            <Text style={styles.tipText}>Chụp ở nơi có ánh sáng tự nhiên</Text>
-                        </View>
-                        <View style={styles.tipItem}>
-                            <Text style={styles.tipIcon}>🧽</Text>
-                            <Text style={styles.tipText}>Làm sạch vật thể trước khi chụp</Text>
-                        </View>
-                        <View style={styles.tipItem}>
-                            <Text style={styles.tipIcon}>📏</Text>
-                            <Text style={styles.tipText}>Chụp cận cảnh để thấy rõ chi tiết</Text>
-                        </View>
+                        {CAMERA_TIPS.map((tip, index) => (
+                            <View key={index} style={styles.tipItem}>
+                                <Text style={styles.tipIcon}>{tip.icon}</Text>
+                                <Text style={styles.tipText}>{tip.text}</Text>
+                            </View>
+                        ))}
                     </ScrollView>
                 </View>
             </View>
@@ -438,36 +482,14 @@ function CameraScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            {/* Camera Viewfinder */}
             <View style={styles.cameraContainer}>
-                <View style={styles.cameraViewfinder}>
-                    <Text style={styles.viewfinderText}>📷 Camera AI</Text>
-                    <Text style={styles.viewfinderSubtext}>Chụp ảnh rác để phân loại</Text>
-
-                    {/* Camera Frame Overlay */}
-                    <View style={styles.cameraFrame}>
-                        <View style={[styles.frameCorner, styles.topLeft]} />
-                        <View style={[styles.frameCorner, styles.topRight]} />
-                        <View style={[styles.frameCorner, styles.bottomLeft]} />
-                        <View style={[styles.frameCorner, styles.bottomRight]} />
-                    </View>
-                </View>
-
+                {renderCameraViewfinder()}
                 {renderCameraControls()}
             </View>
 
-            {/* Image Thumbnails */}
-            {capturedImages.length > 0 && renderImageThumbnails()}
-
-            {/* Capture Area */}
+            {renderImageThumbnails()}
             {renderCaptureArea()}
-
-            {/* Status Bar */}
-            <View style={styles.statusBar}>
-                <Text style={styles.statusText}>
-                    {capturedImages.length}/5 ảnh • Chụp nhiều góc độ để kết quả chính xác hơn
-                </Text>
-            </View>
+            {renderStatusBar()}
 
             {/* Modals */}
             {renderProcessingOverlay()}

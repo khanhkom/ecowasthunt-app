@@ -5,6 +5,7 @@ import {
     Image,
     Platform,
     ScrollView,
+    StatusBar,
     StyleSheet,
     Text,
     TouchableOpacity,
@@ -23,8 +24,53 @@ import {
     TrophyIcon as TrophySolidIcon,
 } from 'react-native-heroicons/solid';
 
-// Mock data
-const userData = {
+// Types
+type Activity = {
+    color: string;
+    icon: React.ReactNode;
+    id: number;
+    points: string;
+    subtitle: string;
+    time: string;
+    title: string;
+    type: string;
+}
+
+type QuickAction = {
+    action: string;
+    gradient: string[];
+    icon: React.ReactNode;
+    id: number;
+    subtitle: string;
+    title: string;
+}
+
+type Tip = {
+    content: string;
+    id: number;
+    image: string;
+    title: string;
+}
+
+type UserData = {
+    level: string;
+    name: string;
+    points: number;
+    progress: number;
+    streak: number;
+    todayReports: number;
+    weeklyGoal: number;
+}
+
+type WasteType = {
+    color: string;
+    icon: string;
+    name: string;
+    percentage: number;
+}
+
+// Mock Data
+const userData: UserData = {
     level: 'Eco Hero',
     name: 'An',
     points: 2850,
@@ -34,7 +80,7 @@ const userData = {
     weeklyGoal: 15,
 };
 
-const quickActions = [
+const quickActions: QuickAction[] = [
     {
         action: 'camera',
         gradient: ['#8B5CF6', '#A855F7'],
@@ -69,7 +115,7 @@ const quickActions = [
     },
 ];
 
-const recentActivities = [
+const recentActivities: Activity[] = [
     {
         color: '#10B981',
         icon: <CheckCircleIcon color="#10B981" size={20} strokeWidth={2} />,
@@ -102,7 +148,7 @@ const recentActivities = [
     },
 ];
 
-const wasteTypes = [
+const wasteTypes: WasteType[] = [
     { color: '#3B82F6', icon: '🥤', name: 'Nhựa', percentage: 35 },
     { color: '#10B981', icon: '📄', name: 'Giấy', percentage: 25 },
     { color: '#F59E0B', icon: '🥫', name: 'Kim loại', percentage: 20 },
@@ -110,7 +156,7 @@ const wasteTypes = [
     { color: '#6B7280', icon: '🗑️', name: 'Khác', percentage: 5 },
 ];
 
-const tips = [
+const tips: Tip[] = [
     {
         content: 'Rửa sạch chai lọ trước khi bỏ vào thùng tái chế',
         id: 1,
@@ -131,8 +177,7 @@ function HomeScreen() {
     useEffect(() => {
         const timer = setInterval(() => {
             setCurrentTime(new Date());
-        }, 60_000); // Update every minute
-
+        }, 60_000);
         return () => { clearInterval(timer); };
     }, []);
 
@@ -143,23 +188,112 @@ function HomeScreen() {
         return 'Chào buổi tối';
     };
 
-    const renderQuickAction = ({ item }) => (
-        <TouchableOpacity
-            onPress={() => { console.log(`Action: ${item.action}`); }}
-            style={[styles.quickActionCard, {
-                backgroundColor: item.gradient[0],
-                shadowColor: item.gradient[0]
-            }]}
-        >
-            <View style={styles.quickActionIcon}>
-                {item.icon}
+    const handleQuickAction = (action: string) => {
+        console.log(`Action: ${action}`);
+    };
+
+    const renderHeader = () => (
+        <View style={styles.header}>
+            <StatusBar backgroundColor="#fff" barStyle="dark-content" />
+            <View style={styles.headerLeft}>
+                <Text style={styles.greeting}>{getGreeting()}</Text>
+                <Text style={styles.userName}>{userData.name}!</Text>
             </View>
+            <TouchableOpacity style={styles.notificationButton}>
+                <BellIcon color="#1F2937" size={24} strokeWidth={2} />
+                <View style={styles.notificationDot} />
+            </TouchableOpacity>
+        </View>
+    );
+
+    const renderStatsCards = () => (
+        <View style={styles.statsContainer}>
+            <View style={styles.statsCard}>
+                <View style={styles.statItem}>
+                    <View style={styles.statIconContainer}>
+                        <StarSolidIcon color="#8B5CF6" size={20} />
+                    </View>
+                    <View>
+                        <Text style={styles.statValue}>{userData.points.toLocaleString()}</Text>
+                        <Text style={styles.statLabel}>Điểm</Text>
+                    </View>
+                </View>
+
+                <View style={styles.statItem}>
+                    <View style={styles.statIconContainer}>
+                        <TrophySolidIcon color="#F59E0B" size={20} />
+                    </View>
+                    <View>
+                        <Text style={styles.statValue}>{userData.level}</Text>
+                        <Text style={styles.statLabel}>Cấp độ</Text>
+                    </View>
+                </View>
+
+                <View style={styles.statItem}>
+                    <View style={styles.statIconContainer}>
+                        <FireIcon color="#EF4444" size={20} strokeWidth={2} />
+                    </View>
+                    <View>
+                        <Text style={styles.statValue}>{userData.streak}</Text>
+                        <Text style={styles.statLabel}>Ngày liên tiếp</Text>
+                    </View>
+                </View>
+            </View>
+
+            <View style={styles.progressCard}>
+                <Text style={styles.progressTitle}>Tiến độ hôm nay</Text>
+                <View style={styles.progressInfo}>
+                    <Text style={styles.progressText}>
+                        {userData.progress}/{userData.weeklyGoal} báo cáo trong tuần
+                    </Text>
+                    <Text style={styles.progressPercentage}>
+                        {Math.round((userData.progress / userData.weeklyGoal) * 100)}%
+                    </Text>
+                </View>
+                <View style={styles.progressBarContainer}>
+                    <View
+                        style={[
+                            styles.progressBarFill,
+                            { width: `${(userData.progress / userData.weeklyGoal) * 100}%` },
+                        ]}
+                    />
+                </View>
+            </View>
+        </View>
+    );
+
+    const renderQuickAction = ({ item }: { item: QuickAction }) => (
+        <TouchableOpacity
+            onPress={() => { handleQuickAction(item.action); }}
+            style={[
+                styles.quickActionCard,
+                {
+                    backgroundColor: item.gradient[0],
+                    shadowColor: item.gradient[0],
+                },
+            ]}
+        >
+            <View style={styles.quickActionIcon}>{item.icon}</View>
             <Text style={styles.quickActionTitle}>{item.title}</Text>
             <Text style={styles.quickActionSubtitle}>{item.subtitle}</Text>
         </TouchableOpacity>
     );
 
-    const renderActivity = ({ item }) => (
+    const renderQuickActions = () => (
+        <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Hành động nhanh</Text>
+            <FlatList
+                contentContainerStyle={styles.quickActionsContainer}
+                data={quickActions}
+                horizontal
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderQuickAction}
+                showsHorizontalScrollIndicator={false}
+            />
+        </View>
+    );
+
+    const renderActivity = ({ item }: { item: Activity }) => (
         <View style={styles.activityItem}>
             <View style={[styles.activityIcon, { backgroundColor: `${item.color}20` }]}>
                 {item.icon}
@@ -175,7 +309,26 @@ function HomeScreen() {
         </View>
     );
 
-    const renderWasteType = (waste, index) => (
+    const renderRecentActivities = () => (
+        <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>Hoạt động gần đây</Text>
+                <TouchableOpacity>
+                    <Text style={styles.seeAllText}>Xem tất cả</Text>
+                </TouchableOpacity>
+            </View>
+            <View style={styles.activitiesContainer}>
+                <FlatList
+                    data={recentActivities}
+                    keyExtractor={(item) => item.id.toString()}
+                    renderItem={renderActivity}
+                    scrollEnabled={false}
+                />
+            </View>
+        </View>
+    );
+
+    const renderWasteType = (waste: WasteType, index: number) => (
         <View key={index} style={styles.wasteTypeItem}>
             <View style={styles.wasteTypeLeft}>
                 <Text style={styles.wasteIcon}>{waste.icon}</Text>
@@ -188,8 +341,8 @@ function HomeScreen() {
                             styles.progressFill,
                             {
                                 backgroundColor: waste.color,
-                                width: `${waste.percentage}%`
-                            }
+                                width: `${waste.percentage}%`,
+                            },
                         ]}
                     />
                 </View>
@@ -198,7 +351,16 @@ function HomeScreen() {
         </View>
     );
 
-    const renderTip = ({ item }) => (
+    const renderWasteStatistics = () => (
+        <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Thống kê loại rác (tuần này)</Text>
+            <View style={styles.wasteStatsCard}>
+                {wasteTypes.map(renderWasteType)}
+            </View>
+        </View>
+    );
+
+    const renderTip = ({ item }: { item: Tip }) => (
         <TouchableOpacity style={styles.tipCard}>
             <Image source={{ uri: item.image }} style={styles.tipImage} />
             <View style={styles.tipContent}>
@@ -208,128 +370,28 @@ function HomeScreen() {
         </TouchableOpacity>
     );
 
+    const renderTipsSection = () => (
+        <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Mẹo và kiến thức</Text>
+            <FlatList
+                contentContainerStyle={styles.tipsContainer}
+                data={tips}
+                horizontal
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderTip}
+                showsHorizontalScrollIndicator={false}
+            />
+        </View>
+    );
+
     return (
         <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <Text style={styles.greeting}>{getGreeting()}</Text>
-                    <Text style={styles.userName}>{userData.name}!</Text>
-                </View>
-                <TouchableOpacity style={styles.notificationButton}>
-                    <BellIcon color="#1F2937" size={24} strokeWidth={2} />
-                    <View style={styles.notificationDot} />
-                </TouchableOpacity>
-            </View>
-
-            {/* Stats Cards */}
-            <View style={styles.statsContainer}>
-                <View style={styles.statsCard}>
-                    <View style={styles.statItem}>
-                        <View style={styles.statIconContainer}>
-                            <StarSolidIcon color="#8B5CF6" size={20} />
-                        </View>
-                        <View>
-                            <Text style={styles.statValue}>{userData.points.toLocaleString()}</Text>
-                            <Text style={styles.statLabel}>Điểm</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.statItem}>
-                        <View style={styles.statIconContainer}>
-                            <TrophySolidIcon color="#F59E0B" size={20} />
-                        </View>
-                        <View>
-                            <Text style={styles.statValue}>{userData.level}</Text>
-                            <Text style={styles.statLabel}>Cấp độ</Text>
-                        </View>
-                    </View>
-
-                    <View style={styles.statItem}>
-                        <View style={styles.statIconContainer}>
-                            <FireIcon color="#EF4444" size={20} strokeWidth={2} />
-                        </View>
-                        <View>
-                            <Text style={styles.statValue}>{userData.streak}</Text>
-                            <Text style={styles.statLabel}>Ngày liên tiếp</Text>
-                        </View>
-                    </View>
-                </View>
-
-                {/* Daily Progress */}
-                <View style={styles.progressCard}>
-                    <Text style={styles.progressTitle}>Tiến độ hôm nay</Text>
-                    <View style={styles.progressInfo}>
-                        <Text style={styles.progressText}>
-                            {userData.progress}/{userData.weeklyGoal} báo cáo trong tuần
-                        </Text>
-                        <Text style={styles.progressPercentage}>
-                            {Math.round((userData.progress / userData.weeklyGoal) * 100)}%
-                        </Text>
-                    </View>
-                    <View style={styles.progressBarContainer}>
-                        <View
-                            style={[
-                                styles.progressBarFill,
-                                { width: `${(userData.progress / userData.weeklyGoal) * 100}%` }
-                            ]}
-                        />
-                    </View>
-                </View>
-            </View>
-
-            {/* Quick Actions */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Hành động nhanh</Text>
-                <FlatList
-                    contentContainerStyle={styles.quickActionsContainer}
-                    data={quickActions}
-                    horizontal
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderQuickAction}
-                    showsHorizontalScrollIndicator={false}
-                />
-            </View>
-
-            {/* Recent Activities */}
-            <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Hoạt động gần đây</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.seeAllText}>Xem tất cả</Text>
-                    </TouchableOpacity>
-                </View>
-                <View style={styles.activitiesContainer}>
-                    <FlatList
-                        data={recentActivities}
-                        keyExtractor={(item) => item.id.toString()}
-                        renderItem={renderActivity}
-                        scrollEnabled={false}
-                    />
-                </View>
-            </View>
-
-            {/* Waste Statistics */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Thống kê loại rác (tuần này)</Text>
-                <View style={styles.wasteStatsCard}>
-                    {wasteTypes.map(renderWasteType)}
-                </View>
-            </View>
-
-            {/* Tips & Education */}
-            <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Mẹo và kiến thức</Text>
-                <FlatList
-                    contentContainerStyle={styles.tipsContainer}
-                    data={tips}
-                    horizontal
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderTip}
-                    showsHorizontalScrollIndicator={false}
-                />
-            </View>
-
+            {renderHeader()}
+            {renderStatsCards()}
+            {renderQuickActions()}
+            {renderRecentActivities()}
+            {renderWasteStatistics()}
+            {renderTipsSection()}
             <View style={styles.bottomPadding} />
         </ScrollView>
     );
@@ -399,7 +461,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingBottom: 20,
         paddingHorizontal: 20,
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
+        paddingTop: 20,
     },
     headerLeft: {
         flex: 1,
@@ -571,13 +633,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
         borderRadius: 16,
         elevation: 3,
+        marginBottom: 3,
         marginRight: 12,
         overflow: 'hidden',
         shadowColor: '#000',
         shadowOffset: { height: 2, width: 0 },
         shadowOpacity: 0.1,
         shadowRadius: 8,
-        width: 280,
+        width: 280
     },
     tipContent: {
         padding: 16,
