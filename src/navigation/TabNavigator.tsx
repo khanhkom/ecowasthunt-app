@@ -1,8 +1,6 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import React from 'react';
+import React from 'react'; // Ensure this import is present
 import { Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-// Import Heroicons
 import {
     HomeIcon,
     MapIcon,
@@ -19,19 +17,46 @@ import {
 
 import { useTheme } from '@/theme';
 
-import { navigationReference } from './navigationService';
-import { Paths } from './paths';
-
-// Import screens
 import { Home } from '@/screens/common';
 import { Forum } from '@/screens/community';
 import { MapView } from '@/screens/map';
 import { Profile } from '@/screens/profile';
 
+import { navigationReference } from './navigationService';
+import { Paths } from './paths';
+
 const Tab = createBottomTabNavigator();
 
-// Enhanced Add Button Component with gradient effect
-function AddButton({ onPress }: { readonly onPress: () => void }) {
+type AddButtonProps = {
+    readonly onPress: () => void;
+}
+
+type TabIconProps = {
+    readonly color: string;
+    readonly focused: boolean;
+}
+
+// Reusable tab icon component
+const createTabIcon = (
+    OutlineIcon: React.ComponentType<{ color: string; size: number; strokeWidth?: number }>,
+    SolidIcon: React.ComponentType<{ color: string; size: number; strokeWidth?: number }>
+) => {
+    function Component({ color, focused }: TabIconProps) {
+        const Icon = focused ? SolidIcon : OutlineIcon;
+        return <Icon color={color} size={24} strokeWidth={focused ? undefined : 2} />;
+    }
+    Component.displayName = 'TabIcon';
+    return Component;
+};
+
+// Tab icon components
+const TabHomeIcon = createTabIcon(HomeIcon, HomeSolidIcon);
+const TabMapIcon = createTabIcon(MapIcon, MapSolidIcon);
+const TabCommunityIcon = createTabIcon(UserGroupIcon, UserGroupSolidIcon);
+const TabUserIcon = createTabIcon(UserIcon, UserSolidIcon);
+
+// Add button component
+function AddButton({ onPress }: AddButtonProps) {
     const { colors } = useTheme();
 
     return (
@@ -43,7 +68,7 @@ function AddButton({ onPress }: { readonly onPress: () => void }) {
                 {
                     backgroundColor: colors.purple500,
                     shadowColor: colors.purple500,
-                }
+                },
             ]}
         >
             <View style={styles.addButtonInner}>
@@ -53,40 +78,53 @@ function AddButton({ onPress }: { readonly onPress: () => void }) {
     );
 }
 
-// Enhanced Icon components with filled/outline states
-function TabCommunityIcon({ color, focused }: { readonly color: string; readonly focused: boolean }) {
-    return focused ?
-        <UserGroupSolidIcon color={color} size={24} /> :
-        <UserGroupIcon color={color} size={24} strokeWidth={2} />
-}
+// Tab configuration
+const tabs = [
+    {
+        component: Home,
+        icon: TabHomeIcon,
+        label: 'Trang chủ',
+        name: 'Home',
+    },
+    {
+        component: MapView,
+        icon: TabMapIcon,
+        label: 'Bản đồ',
+        name: 'Map',
+    },
+    {
+        component: Forum,
+        icon: TabCommunityIcon,
+        label: 'Cộng đồng',
+        name: 'Community',
+    },
+    {
+        component: Profile,
+        icon: TabUserIcon,
+        label: 'Cá nhân',
+        name: 'Profile',
+    },
+];
 
-function TabHomeIcon({ color, focused }: { readonly color: string; readonly focused: boolean }) {
-    return focused ?
-        <HomeSolidIcon color={color} size={24} /> :
-        <HomeIcon color={color} size={24} strokeWidth={2} />
-}
-
-function TabMapIcon({ color, focused }: { readonly color: string; readonly focused: boolean }) {
-    return focused ?
-        <MapSolidIcon color={color} size={24} /> :
-        <MapIcon color={color} size={24} strokeWidth={2} />
-}
-
-function TabUserIcon({ color, focused }: { readonly color: string; readonly focused: boolean }) {
-    return focused ?
-        <UserSolidIcon color={color} size={24} /> :
-        <UserIcon color={color} size={24} strokeWidth={2} />
-}
-
-// Enhanced Tab Navigator
 function TabNavigator() {
     const { colors } = useTheme();
 
     const handleAddPress = () => {
-        const navigation = navigationReference.current;
-        if (navigation) {
-            navigation.navigate(Paths.ReportWaste);
-        }
+        navigationReference.current?.navigate(Paths.ReportWaste);
+    };
+
+    const tabBarStyle = {
+        backgroundColor: colors.gray50,
+        borderTopColor: colors.gray200,
+        borderTopWidth: 0.5,
+        elevation: 8,
+        height: Platform.OS === 'ios' ? 85 : 65,
+        paddingBottom: Platform.OS === 'ios' ? 25 : 8,
+        paddingTop: 8,
+        shadowColor: '#000',
+        shadowOffset: { height: -2, width: 0 },
+        shadowOpacity: 0.1,
+        shadowRadius: 8,
     };
 
     return (
@@ -94,54 +132,27 @@ function TabNavigator() {
             screenOptions={{
                 headerShown: false,
                 tabBarActiveTintColor: colors.purple500,
-                tabBarInactiveTintColor: colors.gray500,
-                tabBarItemStyle: {
-                    paddingVertical: 4,
-                },
+                tabBarInactiveTintColor: colors.gray400,
+                tabBarItemStyle: { paddingVertical: 4 },
                 tabBarLabelStyle: {
                     fontSize: 11,
                     fontWeight: '600',
                     marginTop: 2,
                 },
-                tabBarStyle: {
-                    backgroundColor: colors.gray50,
-                    borderTopColor: colors.gray200,
-                    borderTopWidth: 0.5,
-                    elevation: 8,
-                    height: Platform.OS === 'ios' ? 85 : 65,
-                    paddingBottom: Platform.OS === 'ios' ? 25 : 8,
-                    paddingTop: 8,
-                    shadowColor: '#000',
-                    shadowOffset: {
-                        height: -2,
-                        width: 0,
-                    },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 8,
-                },
+                tabBarStyle,
             }}
         >
-            <Tab.Screen
-                component={Home}
-                name="Home"
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <TabHomeIcon color={color} focused={focused} />
-                    ),
-                    tabBarLabel: 'Trang chủ',
-                }}
-            />
-
-            <Tab.Screen
-                component={MapView}
-                name="Map"
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <TabMapIcon color={color} focused={focused} />
-                    ),
-                    tabBarLabel: 'Bản đồ',
-                }}
-            />
+            {tabs.slice(0, 2).map(({ component, icon, label, name }) => (
+                <Tab.Screen
+                    component={component}
+                    key={name}
+                    name={name}
+                    options={{
+                        tabBarIcon: icon,
+                        tabBarLabel: label,
+                    }}
+                />
+            ))}
 
             <Tab.Screen
                 component={View}
@@ -162,27 +173,17 @@ function TabNavigator() {
                 }}
             />
 
-            <Tab.Screen
-                component={Forum}
-                name="Community"
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <TabCommunityIcon color={color} focused={focused} />
-                    ),
-                    tabBarLabel: 'Cộng đồng',
-                }}
-            />
-
-            <Tab.Screen
-                component={Profile}
-                name="Profile"
-                options={{
-                    tabBarIcon: ({ color, focused }) => (
-                        <TabUserIcon color={color} focused={focused} />
-                    ),
-                    tabBarLabel: 'Cá nhân',
-                }}
-            />
+            {tabs.slice(2).map(({ component, icon, label, name }) => (
+                <Tab.Screen
+                    component={component}
+                    key={name}
+                    name={name}
+                    options={{
+                        tabBarIcon: icon,
+                        tabBarLabel: label,
+                    }}
+                />
+            ))}
         </Tab.Navigator>
     );
 }
@@ -195,10 +196,7 @@ const styles = StyleSheet.create({
         height: 60,
         justifyContent: 'center',
         marginBottom: Platform.OS === 'ios' ? 25 : 15,
-        shadowOffset: {
-            height: 4,
-            width: 0,
-        },
+        shadowOffset: { height: 4, width: 0 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
         width: 60,
