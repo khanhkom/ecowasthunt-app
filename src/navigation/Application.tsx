@@ -56,7 +56,7 @@ function ApplicationNavigator() {
   return (
     <SafeAreaProvider>
       <NavigationContainer ref={navigationReference} theme={navigationTheme}>
-        <Stack.Navigator initialRouteName={Paths.MainTabs} key={variant} screenOptions={{ headerShown: false }}>
+        <Stack.Navigator initialRouteName={Paths.Login} key={variant} screenOptions={{ headerShown: false }}>
           {/* Auth screens */}
           <Stack.Screen component={Login} name={Paths.Login} />
           <Stack.Screen component={Register} name={Paths.Register} />
