@@ -1,8 +1,9 @@
+import { setAuthToken } from '@/services/api';
+import { login } from '@/services/functions/authApi';
+import storageService from '@/services/functions/storageService';
 import React, { useRef, useState } from 'react';
 import {
-    Alert,
     Animated,
-    Dimensions,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -21,15 +22,16 @@ import {
     LockClosedIcon,
 } from 'react-native-heroicons/outline';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 import { navigate, Paths } from '@/navigation';
 
 
 function LoginScreen() {
-    const [email, setEmail] = useState('');
+    const [userName, setUserName] = useState('');
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
-    const [emailFocused, setEmailFocused] = useState(false);
+    const [userNameFocused, setUserNameFocused] = useState(false);
     const [passwordFocused, setPasswordFocused] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -38,6 +40,21 @@ function LoginScreen() {
     const formTranslateY = useRef(new Animated.Value(30)).current;
 
     React.useEffect(() => {
+        // Kiểm tra token khi app khởi động
+        function checkToken() {
+            const authData = storageService.getItem('auth');
+            if (
+                authData &&
+                typeof authData === 'object' &&
+                'accessToken' in authData &&
+                typeof authData.accessToken === 'string'
+            ) {
+                setAuthToken(authData.accessToken);
+                // TODO: Kiểm tra expiresIn nếu cần
+                navigate(Paths.MainTabs);
+            }
+        }
+        checkToken();
         // Entrance animation
         Animated.parallel([
             Animated.timing(formOpacity, {
@@ -53,7 +70,7 @@ function LoginScreen() {
         ]).start();
     }, []);
 
-    const animateButton = (toValue) => {
+    const animateButton = (toValue: number) => {
         Animated.spring(buttonScale, {
             friction: 8,
             tension: 50,
@@ -62,29 +79,57 @@ function LoginScreen() {
         }).start();
     };
 
-    const handleLogin = async () => {
-        if (!email.trim() || !password.trim()) {
-            Alert.alert('Lỗi', 'Vui lòng nhập đầy đủ thông tin');
+    const handleLogin = async (): Promise<void> => {
+        if (!userName.trim() || !password.trim()) {
+            Toast.show({
+                text1: 'Lỗi',
+                text2: 'Vui lòng nhập đầy đủ thông tin',
+                type: 'error',
+            });
             return;
         }
 
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
+            // Gọi API đăng nhập
+            type LoginResponse = { accessToken?: string; expiresIn?: number; refreshExpiresIn?: number; refreshToken?: string; };
+            console.log("login::", { password, userName })
+            const response = await login({ password, userName });
+            console.log("response::", response.data)
+            const data = (response as { data?: LoginResponse }).data;
+            const token = data?.accessToken;
+            if (typeof token === 'string') {
+                setAuthToken(token);
+                // Lưu thông tin đăng nhập vào localstorage
+                storageService.setItem('auth', {
+                    accessToken: data?.accessToken,
+                    expiresIn: data?.expiresIn,
+                    loginAt: Date.now(),
+                    refreshExpiresIn: data?.refreshExpiresIn,
+                    refreshToken: data?.refreshToken,
+                });
+            }
             // Navigate to main app
-            // navigation.replace('MainApp');
-            Alert.alert('Thành công', 'Đăng nhập thành công!');
-        } catch {
-            Alert.alert('Lỗi', 'Đăng nhập thất bại. Vui lòng thử lại.');
+            Toast.show({
+                text1: 'Thành công',
+                text2: 'Đăng nhập thành công!',
+                type: 'success',
+            });
+            navigate(Paths.MainTabs);
+        } catch (error) {
+            console.error("error", error)
+            Toast.show({
+                text1: 'Lỗi',
+                text2: 'Thông tin đăng nhập không chính xác!',
+                type: 'error',
+            });
         } finally {
             setIsLoading(false);
         }
     };
 
-    const isFormValid = email.trim() && password.trim();
+    const isFormValid = userName.trim() && password.trim();
 
     return (
         <SafeAreaView style={styles.container}>
@@ -117,34 +162,30 @@ function LoginScreen() {
                             },
                         ]}
                     >
-                        {/* Email Input */}
+                        {/* UserName Input */}
                         <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Email</Text>
+                            <Text style={styles.label}>Tên đăng nhập</Text>
                             <View style={[
                                 styles.inputContainer,
-                                emailFocused && styles.inputContainerFocused,
-                                email && styles.inputContainerFilled,
+                                userNameFocused && styles.inputContainerFocused,
+                                userName && styles.inputContainerFilled,
                             ]}>
-                                <EnvelopeIcon
-                                    color={emailFocused ? '#8B5CF6' : '#6B7280'}
+                                <LockClosedIcon
+                                    color={userNameFocused ? '#8B5CF6' : '#6B7280'}
                                     size={20}
                                     style={styles.inputIcon}
                                 />
                                 <TextInput
-                                    accessibilityHint="Nhập địa chỉ email để đăng nhập"
-                                    accessibilityLabel="Email input"
+                                    accessibilityHint="Nhập tên đăng nhập để đăng nhập"
+                                    accessibilityLabel="UserName input"
                                     autoCapitalize="none"
                                     autoCorrect={false}
-                                    keyboardType="email-address"
-                                    onBlur={() => { setEmailFocused(false); }}
-                                    onChangeText={setEmail}
-                                    onFocus={() => {
-                                        setEmailFocused(true);
-                                    }}
-                                    placeholder="Nhập email của bạn"
+                                    onBlur={() => { setUserNameFocused(false); }}
+                                    onChangeText={setUserName}
+                                    placeholder="Nhập tên đăng nhập của bạn"
                                     placeholderTextColor="#9CA3AF"
                                     style={styles.textInput}
-                                    value={email}
+                                    value={userName}
                                 />
                             </View>
                         </View>
@@ -167,7 +208,8 @@ function LoginScreen() {
                                     accessibilityLabel="Password input"
                                     onBlur={() => { setPasswordFocused(false); }}
                                     onChangeText={setPassword}
-                                    onFocus={() => { setPasswordFocused(true); }}
+                                    // onFocus={() => { setPasswordFocused(true); }}
+                                    autoCapitalize='none'
                                     placeholder="Nhập mật khẩu"
                                     placeholderTextColor="#9CA3AF"
                                     secureTextEntry={!showPassword}
@@ -192,7 +234,11 @@ function LoginScreen() {
                         <TouchableOpacity
                             onPress={() => {
                                 // navigation.navigate('ForgotPassword');
-                                Alert.alert('Quên mật khẩu', 'Chức năng đang được phát triển');
+                                Toast.show({
+                                    text1: 'Quên mật khẩu',
+                                    text2: 'Chức năng đang được phát triển',
+                                    type: 'info',
+                                });
                             }}
                             style={styles.forgotPassword}
                         >
@@ -205,7 +251,7 @@ function LoginScreen() {
                                 accessibilityHint="Nhấn để đăng nhập vào ứng dụng"
                                 accessibilityLabel="Đăng nhập"
                                 disabled={!isFormValid || isLoading}
-                                onPress={handleLogin}
+                                onPress={() => { void handleLogin(); }}
                                 onPressIn={() => { animateButton(0.95); }}
                                 onPressOut={() => { animateButton(1); }}
                                 style={[
@@ -245,6 +291,7 @@ function LoginScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <Toast />
         </SafeAreaView>
     );
 }

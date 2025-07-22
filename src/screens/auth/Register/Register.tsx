@@ -1,6 +1,6 @@
+import { register as registerApi } from '@/services/functions/authApi';
 import React, { useRef, useState } from 'react';
 import {
-    Alert,
     Animated,
     Dimensions,
     KeyboardAvoidingView,
@@ -24,6 +24,7 @@ import {
 } from 'react-native-heroicons/outline';
 import { CheckCircleIcon as CheckCircleIconSolid } from 'react-native-heroicons/solid';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 
 import { goBack } from '@/navigation';
 
@@ -103,32 +104,40 @@ function RegisterScreen() {
         const errors = validateForm();
 
         if (errors.length > 0) {
-            Alert.alert('Lỗi', errors.join('\n'));
+            Toast.show({
+                text1: 'Lỗi',
+                text2: errors.join('\n'),
+                type: 'error',
+            });
             return;
         }
 
         setIsLoading(true);
 
         try {
-            // Simulate API call
-            await new Promise(resolve => setTimeout(resolve, 2000));
+            // Gọi API đăng ký
+            await registerApi({
+                mail: email,
+                password,
+                userName: username,
+            });
 
-            Alert.alert(
-                'Đăng ký thành công!',
-                'Chào mừng bạn đến với cộng đồng bảo vệ môi trường!',
-                [
-                    {
-                        onPress: () => {
-                            // navigation.replace('MainApp');
-                            // Or go back to login
-                            goBack();
-                        },
-                        text: 'Tiếp tục'
-                    }
-                ]
-            );
+            Toast.show({
+                onHide: () => {
+                    goBack();
+                },
+                text1: 'Đăng ký thành công!',
+                text2: 'Chào mừng bạn đến với cộng đồng bảo vệ môi trường!',
+                type: 'success',
+            });
         } catch {
-            Alert.alert('Lỗi', 'Đăng ký thất bại. Vui lòng thử lại.');
+            // Xử lý lỗi trả về từ API
+            // console.log("error", error?.message)
+            Toast.show({
+                text1: 'Lỗi',
+                text2: 'Đăng ký thất bại. Vui lòng thử lại.',
+                type: 'error',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -419,6 +428,7 @@ function RegisterScreen() {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+            <Toast />
         </SafeAreaView>
     );
 }

@@ -1,5 +1,7 @@
 import type { RootScreenProps } from '@/navigation/types';
 
+import { setAuthToken } from '@/services/api';
+import storageService from '@/services/functions/storageService';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +17,7 @@ function Startup({ navigation }: RootScreenProps<Paths.Startup>) {
   const { fonts, gutters, layout } = useTheme();
   const { t } = useTranslation();
 
-  const { isError, isFetching, isSuccess } = useQuery({
+  const { isError, isFetching } = useQuery({
     queryFn: () => {
       return Promise.resolve(true);
     },
@@ -23,13 +25,26 @@ function Startup({ navigation }: RootScreenProps<Paths.Startup>) {
   });
 
   useEffect(() => {
-    if (isSuccess) {
+    // Check auth from local storage
+    const authData = storageService.getItem('auth');
+    if (
+      authData &&
+      typeof authData === 'object' &&
+      'accessToken' in authData &&
+      typeof authData.accessToken === 'string'
+    ) {
+      setAuthToken(authData.accessToken);
       navigation.reset({
         index: 0,
-        routes: [{ name: Paths.Example }],
+        routes: [{ name: Paths.MainTabs }],
       });
+      return;
     }
-  }, [isSuccess, navigation]);
+    navigation.reset({
+      index: 0,
+      routes: [{ name: Paths.Login }],
+    });
+  }, [navigation]);
 
   return (
     <SafeScreen>

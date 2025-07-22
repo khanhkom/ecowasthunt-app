@@ -1,5 +1,8 @@
+import { setAuthToken } from '@/services/api';
+import storageService from '@/services/functions/storageService';
 import React, { useState } from 'react';
 import {
+    Alert,
     Dimensions,
     Image,
     Platform,
@@ -26,6 +29,9 @@ import {
     StarIcon as StarSolidIcon,
     TrophyIcon as TrophySolidIcon,
 } from 'react-native-heroicons/solid';
+
+import { replace } from '@/navigation/navigationService';
+import { Paths } from '@/navigation/paths';
 
 const { width } = Dimensions.get('window');
 
@@ -229,11 +235,11 @@ function ProfileScreen() {
                     <Text style={[styles.menuTitle, isLogout && { color: '#EF4444' }]}>
                         {title}
                     </Text>
-                    {subtitle ? <Text style={styles.menuSubtitle}>{subtitle}</Text> : null}
+                    {subtitle === undefined ? undefined : <Text style={styles.menuSubtitle}>{subtitle}</Text>}
                 </View>
             </View>
             <View style={styles.menuItemRight}>
-                {showBadge ? <View style={styles.notificationBadge} /> : null}
+                {showBadge ? <View style={styles.notificationBadge} /> : undefined}
                 <ArrowRightOnRectangleIcon
                     color={isLogout ? '#EF4444' : '#9CA3AF'}
                     size={16}
@@ -271,12 +277,33 @@ function ProfileScreen() {
                 <ArrowRightOnRectangleIcon color="#EF4444" size={20} strokeWidth={2} />,
                 'Đăng xuất',
                 undefined,
-                () => { },
+                handleLogout,
                 false,
                 true
             )}
         </View>
     );
+
+    // Đăng xuất
+    const handleLogout = () => {
+        Alert.alert(
+            'Đăng xuất',
+            'Bạn có chắc chắn muốn đăng xuất?',
+            [
+                { style: 'cancel', text: 'Huỷ' },
+                {
+                    onPress: () => {
+                        storageService.removeItem('auth');
+                        setAuthToken();
+                        replace(Paths.Login);
+                    },
+                    style: 'destructive',
+                    text: 'Đăng xuất',
+                },
+            ],
+            { cancelable: true }
+        );
+    };
 
     return (
         <ScrollView showsVerticalScrollIndicator={false} style={styles.container}>
