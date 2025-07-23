@@ -137,7 +137,7 @@ function ReportDetailScreen({ route }) {
                 },
                 resolution: null, // Will be set if status is RESOLVED
                 severity: 'HIGH',
-                status: 'IN_PROGRESS',
+                status: 'pending',
                 tags: ['public_area', 'near_school', 'urgent'],
                 title: 'Bãi rác tự phát tại vỉa hè đường Đại Cồ Việt',
                 updatedAt: new Date('2024-01-15T14:20:00Z'),
@@ -286,7 +286,6 @@ function ReportDetailScreen({ route }) {
     const status = REPORT_STATUS[report.status];
     const severity = SEVERITY_LEVELS[report.severity];
     const StatusIcon = status.icon;
-
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
@@ -339,7 +338,7 @@ function ReportDetailScreen({ route }) {
                                 <Text style={styles.statusText}>{status.name}</Text>
                             </View>
 
-                            <Text style={styles.reportId}>#{report._id.slice(-6)}</Text>
+                            {/* <Text style={styles.reportId}>#{report._id.slice(-6)}</Text> */}
                         </View>
 
                         <Text style={styles.statusDescription}>{status.description}</Text>

@@ -107,8 +107,9 @@ export const useFormSubmit = (formData: {
         title: formData.title,
         wasteType: formData.wasteType,
       };
+      console.log('reportData::', reportData);
 
-      await createWasteReport(reportData);
+      const resReport = await createWasteReport(reportData);
 
       Alert.alert(
         'Báo cáo thành công!',
@@ -123,6 +124,7 @@ export const useFormSubmit = (formData: {
         ],
       );
     } catch (error: unknown) {
+      console.log('error::', error);
       const message =
         typeof error === 'object' && error && 'message' in error
           ? (error as { message?: string }).message
