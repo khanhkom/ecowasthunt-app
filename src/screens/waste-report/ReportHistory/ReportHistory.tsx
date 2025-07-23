@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
+    ActivityIndicator,
     Alert,
     Animated,
     FlatList,
@@ -111,7 +112,7 @@ function MyReportsScreen() {
 
             if (response.data?.data) {
                 const newReports = response.data.data;
-
+                const metaData = response.data.meta
                 if (reset) {
                     setReports(newReports);
                 } else {
@@ -119,11 +120,10 @@ function MyReportsScreen() {
                 }
 
                 setPagination({
-                    hasMore: newReports.length === pagination.limit &&
-                        (response.page * response.limit) < response.total,
-                    limit: response.limit || pagination.limit,
-                    page: response.page || currentPage,
-                    total: response.total || 0,
+                    hasMore: metaData?.hasNextPage,
+                    limit: metaData.limit || pagination.limit,
+                    page: metaData.page || currentPage,
+                    total: metaData.total || 0,
                 });
             }
         } catch (error) {
@@ -233,61 +233,70 @@ function MyReportsScreen() {
     const renderSeparator = useCallback(() => (
         <View style={styles.separator} />
     ), []);
+    const Header = () => {
+        return (<View style={styles.header}>
+            <TouchableOpacity
+                onPress={() => { goBack(); }}
+                style={styles.backButton}
+            >
+                <ChevronLeftIcon color="#6B7280" size={24} />
+            </TouchableOpacity>
 
+            <View style={styles.headerCenter}>
+                <Text style={styles.headerTitle}>Báo Cáo Của Tôi</Text>
+                <Text style={styles.headerSubtitle}>
+                    {pagination.total} báo cáo
+                </Text>
+            </View>
+
+            <View style={styles.headerActions}>
+                <TouchableOpacity
+                    onPress={toggleSearch}
+                    style={styles.actionButton}
+                >
+                    {showSearchInput ? (
+                        <XMarkIcon color="#6B7280" size={20} />
+                    ) : (
+                        <MagnifyingGlassIcon color="#6B7280" size={20} />
+                    )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => { setShowFilterModal(true); }}
+                    style={[
+                        styles.actionButton,
+                        getActiveFiltersCount() > 0 && styles.actionButtonActive
+                    ]}
+                >
+                    <FunnelIcon
+                        color={getActiveFiltersCount() > 0 ? "#8B5CF6" : "#6B7280"}
+                        size={20}
+                    />
+                    {getActiveFiltersCount() > 0 && (
+                        <View style={styles.filterBadge}>
+                            <Text style={styles.filterBadgeText}>
+                                {getActiveFiltersCount()}
+                            </Text>
+                        </View>
+                    )}
+                </TouchableOpacity>
+            </View>
+        </View>
+        )
+    }
+    if (isLoading) return (
+        <SafeAreaView style={styles.container}>
+            <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
+            <Header />
+            <ActivityIndicator />
+            <Text style={styles.loadingText}>Đang tải...</Text>
+
+        </SafeAreaView>
+    )
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
-
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => { goBack(); }}
-                    style={styles.backButton}
-                >
-                    <ChevronLeftIcon color="#6B7280" size={24} />
-                </TouchableOpacity>
-
-                <View style={styles.headerCenter}>
-                    <Text style={styles.headerTitle}>Báo Cáo Của Tôi</Text>
-                    <Text style={styles.headerSubtitle}>
-                        {pagination.total} báo cáo
-                    </Text>
-                </View>
-
-                <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        onPress={toggleSearch}
-                        style={styles.actionButton}
-                    >
-                        {showSearchInput ? (
-                            <XMarkIcon color="#6B7280" size={20} />
-                        ) : (
-                            <MagnifyingGlassIcon color="#6B7280" size={20} />
-                        )}
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => { setShowFilterModal(true); }}
-                        style={[
-                            styles.actionButton,
-                            getActiveFiltersCount() > 0 && styles.actionButtonActive
-                        ]}
-                    >
-                        <FunnelIcon
-                            color={getActiveFiltersCount() > 0 ? "#8B5CF6" : "#6B7280"}
-                            size={20}
-                        />
-                        {getActiveFiltersCount() > 0 && (
-                            <View style={styles.filterBadge}>
-                                <Text style={styles.filterBadgeText}>
-                                    {getActiveFiltersCount()}
-                                </Text>
-                            </View>
-                        )}
-                    </TouchableOpacity>
-                </View>
-            </View>
-
+            <Header />
             {/* Search Input */}
             {showSearchInput ? <View style={styles.searchContainer}>
                 <TextInput
@@ -364,10 +373,7 @@ function MyReportsScreen() {
                 visible={showSortModal}
             />
 
-            {/* Loading Overlay */}
-            {isLoading ? <View style={styles.loadingOverlay}>
-                <Text style={styles.loadingText}>Đang tải...</Text>
-            </View> : null}
+
         </SafeAreaView>
     );
 }

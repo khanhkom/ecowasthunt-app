@@ -27,7 +27,6 @@ const ResolutionInfo: React.FC<ResolutionInfoProps> = ({
     formatDate,
     resolution,
 }) => {
-    console.log("resolution", resolution)
     if (!resolution.resolvedBy) {
         return null;
     }
