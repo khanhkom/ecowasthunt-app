@@ -97,6 +97,7 @@ export default tseslint.config(
       ],
       'react-refresh/only-export-components': OFF,
       'react/forbid-component-props': OFF,
+      'react/function-component-definition': OFF,
       'react/jsx-filename-extension': [ERROR, { extensions: ['.tsx', '.jsx'] }],
       'react/jsx-max-depth': [ERROR, { max: 10 }],
       'react/jsx-no-bind': OFF,
@@ -118,7 +119,6 @@ export default tseslint.config(
       'unicorn/no-keyword-prefix': OFF,
       'unicorn/no-useless-undefined': OFF,
       'unicorn/prefer-top-level-await': 0, // not valid on RN for the moment
-
       'unicorn/prevent-abbreviations': [
         ERROR,
         {

@@ -332,7 +332,7 @@ function MyReportsScreen() {
                 ListEmptyComponent={isLoading ? null : renderEmptyState}
                 ListFooterComponent={renderLoadingMore}
                 maxToRenderPerBatch={5}
-                onEndReached={handleLoadMore}
+                // onEndReached={handleLoadMore}
                 onEndReachedThreshold={0.3}
                 refreshControl={
                     <RefreshControl

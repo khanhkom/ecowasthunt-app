@@ -1,12 +1,12 @@
+// screens/ReportDetailScreen.tsx
+
 import { getWasteReportDetail } from '@/services/functions/wasteReportApi';
+import { RouteProp } from '@react-navigation/native';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
     Animated,
-    Dimensions,
-    Image,
     Linking,
-    Modal,
     Platform,
     ScrollView,
     Share,
@@ -16,54 +16,46 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
-import {
-    ArrowTopRightOnSquareIcon,
-    CalendarIcon,
-    CheckCircleIcon,
-    ChevronLeftIcon,
-    ClockIcon,
-    Cog6ToothIcon,
-    CurrencyDollarIcon,
-    EllipsisHorizontalIcon,
-    ExclamationTriangleIcon,
-    EyeIcon,
-    HandThumbDownIcon,
-    HandThumbUpIcon,
-    MapPinIcon,
-    PhotoIcon,
-    ScaleIcon,
-    ShareIcon,
-    TagIcon,
-    UserIcon,
-    XMarkIcon,
-} from 'react-native-heroicons/outline';
-import {
-    CheckCircleIcon as CheckCircleIconSolid,
-    ClockIcon as ClockIconSolid,
-    ExclamationTriangleIcon as ExclamationTriangleIconSolid,
-    HandThumbDownIcon as HandThumbDownIconSolid,
-    HandThumbUpIcon as HandThumbUpIconSolid,
-    XCircleIcon as XCircleIconSolid,
-} from 'react-native-heroicons/solid';
+import { ExclamationTriangleIcon } from 'react-native-heroicons/outline';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { goBack } from '@/navigation';
 
 import { REPORT_STATUS, SEVERITY_LEVELS, WASTE_TYPES } from '../ReportHistory/reportConstants';
 
-const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
+// Item
+import AIClassificationComponent from './Item/AIClassification';
+import ContentCard from './Item/ContentCard';
+import ImageGallery from './Item/ImageGallery';
+import ImageModal from './Item/ImageModal';
+import LocationInfo from './Item/LocationInfo';
+import OptionsModal from './Item/OptionsModal';
+import ReportHeader from './Item/ReportHeader';
+import ResolutionInfo from './Item/ResolutionInfo';
+import StatsAndActions from './Item/StatsAndActions';
+import StatusCard from './Item/StatusCard';
+import TagsSection from './Item/TagsSection';
+import WasteInfo from './Item/WasteInfo';
 
-// Constants from backend
+// Types
+import { Report, RouteParams as RouteParameters, VoteType } from './report';
 
-function ReportDetailScreen({ route }) {
+type ReportDetailScreenProps = {
+    readonly route: RouteProp<{ ReportDetail: RouteParameters }, 'ReportDetail'>;
+}
+
+const ReportDetailScreen: React.FC<ReportDetailScreenProps> = ({ route }) => {
     const { reportId } = route.params;
-    const [report, setReport] = useState(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [userVote, setUserVote] = useState(null); // 'up', 'down', or null
-    const [showImageModal, setShowImageModal] = useState(false);
-    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [showMoreOptions, setShowMoreOptions] = useState(false);
 
+    // State
+    const [report, setReport] = useState<null | Report>(null);
+    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [userVote, setUserVote] = useState<VoteType>(null);
+    const [showImageModal, setShowImageModal] = useState<boolean>(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState<number>(0);
+    const [showMoreOptions, setShowMoreOptions] = useState<boolean>(false);
+
+    // Animations
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
@@ -85,18 +77,15 @@ function ReportDetailScreen({ route }) {
         ]).start();
     }, []);
 
-    const loadReportDetail = async () => {
+    const loadReportDetail = async (): Promise<void> => {
         try {
             setIsLoading(true);
-
-            // Simulate API call - replace with actual API
-            console.log("response::", reportId)
+            console.log("response::", reportId);
             const response = await getWasteReportDetail(reportId);
-            console.log("response::", response.data?.data)
+            console.log("response::", response.data?.data);
             if (response.data?.data) {
                 setReport(response.data.data);
             }
-
         } catch {
             Alert.alert('Lỗi', 'Không thể tải chi tiết báo cáo');
             goBack();
@@ -105,15 +94,15 @@ function ReportDetailScreen({ route }) {
         }
     };
 
-    const handleVote = async (voteType) => {
+    const handleVote = async (voteType: 'down' | 'up'): Promise<void> => {
         try {
             if (userVote === voteType) {
                 // Remove vote
                 setUserVote(null);
                 if (voteType === 'up') {
-                    setReport(previous => ({ ...previous, upvotes: previous.upvotes - 1 }));
+                    setReport(previous => previous ? { ...previous, upvotes: previous.upvotes - 1 } : null);
                 } else {
-                    setReport(previous => ({ ...previous, downvotes: previous.downvotes - 1 }));
+                    setReport(previous => previous ? { ...previous, downvotes: previous.downvotes - 1 } : null);
                 }
             } else {
                 // Change vote or add new vote
@@ -121,6 +110,8 @@ function ReportDetailScreen({ route }) {
                 setUserVote(voteType);
 
                 setReport(previous => {
+                    if (!previous) return null;
+
                     let newUpvotes = previous.upvotes;
                     let newDownvotes = previous.downvotes;
 
@@ -141,8 +132,10 @@ function ReportDetailScreen({ route }) {
         }
     };
 
-    const handleShare = async () => {
+    const handleShare = async (): Promise<void> => {
         try {
+            if (!report) return;
+
             await Share.share({
                 message: `Báo cáo rác thải: ${report.title}\n\nVị trí: ${report.location.address}, ${report.location.district}, ${report.location.city}\n\nXem chi tiết trong ứng dụng.`,
                 title: 'Chia sẻ báo cáo rác thải',
@@ -152,23 +145,32 @@ function ReportDetailScreen({ route }) {
         }
     };
 
-    const openMap = () => {
+    const openMap = (): void => {
+        if (!report) return;
+
         const [lng, lat] = report.location.coordinates;
         const url = Platform.select({
             android: `geo:${lat},${lng}`,
             ios: `maps:${lat},${lng}`,
         });
 
-        Linking.canOpenURL(url).then(supported => {
-            if (supported) {
-                Linking.openURL(url);
-            } else {
-                Alert.alert('Lỗi', 'Không thể mở ứng dụng bản đồ');
-            }
-        });
+        if (url) {
+            Linking.canOpenURL(url).then(supported => {
+                if (supported) {
+                    Linking.openURL(url);
+                } else {
+                    Alert.alert('Lỗi', 'Không thể mở ứng dụng bản đồ');
+                }
+            });
+        }
     };
 
-    const formatDate = (date) => {
+    const handleImagePress = (index: number): void => {
+        setSelectedImageIndex(index);
+        setShowImageModal(true);
+    };
+
+    const formatDate = (date: string): string => {
         return new Date(date).toLocaleString('vi-VN', {
             day: 'numeric',
             hour: '2-digit',
@@ -178,13 +180,14 @@ function ReportDetailScreen({ route }) {
         });
     };
 
-    const formatCurrency = (amount) => {
+    const formatCurrency = (amount: number): string => {
         return new Intl.NumberFormat('vi-VN', {
             currency: 'VND',
             style: 'currency',
         }).format(amount);
     };
 
+    // Loading state
     if (isLoading) {
         return (
             <SafeAreaView style={styles.container}>
@@ -196,6 +199,7 @@ function ReportDetailScreen({ route }) {
         );
     }
 
+    // Error state
     if (!report) {
         return (
             <SafeAreaView style={styles.container}>
@@ -203,10 +207,7 @@ function ReportDetailScreen({ route }) {
                 <View style={styles.errorContainer}>
                     <ExclamationTriangleIcon color="#EF4444" size={64} />
                     <Text style={styles.errorTitle}>Không tìm thấy báo cáo</Text>
-                    <TouchableOpacity
-                        onPress={() => { goBack(); }}
-                        style={styles.backButton}
-                    >
+                    <TouchableOpacity onPress={goBack} style={styles.backButton}>
                         <Text style={styles.backButtonText}>Quay lại</Text>
                     </TouchableOpacity>
                 </View>
@@ -214,47 +215,22 @@ function ReportDetailScreen({ route }) {
         );
     }
 
-    console.log("report::::::::", report)
+    // Get data from constants
     const wasteType = WASTE_TYPES[report.wasteType];
     const status = REPORT_STATUS[report.status];
     const severity = SEVERITY_LEVELS[report.severity];
-    const StatusIcon = status.icon;
+
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar backgroundColor="#F9FAFB" barStyle="dark-content" />
 
-            {/* Header */}
-            <View style={styles.header}>
-                <TouchableOpacity
-                    onPress={() => { goBack(); }}
-                    style={styles.headerButton}
-                >
-                    <ChevronLeftIcon color="#6B7280" size={24} />
-                </TouchableOpacity>
+            <ReportHeader
+                onBack={goBack}
+                onMoreOptions={() => { setShowMoreOptions(true); }}
+                onShare={handleShare}
+            />
 
-                <Text style={styles.headerTitle}>Chi tiết báo cáo</Text>
-
-                <View style={styles.headerActions}>
-                    <TouchableOpacity
-                        onPress={handleShare}
-                        style={styles.headerButton}
-                    >
-                        <ShareIcon color="#6B7280" size={24} />
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        onPress={() => { setShowMoreOptions(true); }}
-                        style={styles.headerButton}
-                    >
-                        <EllipsisHorizontalIcon color="#6B7280" size={24} />
-                    </TouchableOpacity>
-                </View>
-            </View>
-
-            <ScrollView
-                showsVerticalScrollIndicator={false}
-                style={styles.content}
-            >
+            <ScrollView showsVerticalScrollIndicator={false} style={styles.content}>
                 <Animated.View style={[
                     styles.animatedContainer,
                     {
@@ -262,362 +238,75 @@ function ReportDetailScreen({ route }) {
                         transform: [{ scale: scaleAnim }],
                     },
                 ]}>
+                    <StatusCard assignedTo={report.assignedTo} status={status} />
 
-                    {/* Status Card */}
-                    <View style={styles.statusCard}>
-                        <View style={styles.statusHeader}>
-                            <View style={[styles.statusBadge, { backgroundColor: status.color }]}>
-                                <StatusIcon color="#FFFFFF" size={16} />
-                                <Text style={styles.statusText}>{status.name}</Text>
-                            </View>
+                    <ContentCard
+                        createdAt={report.createdAt}
+                        description={report.description}
+                        formatDate={formatDate}
+                        reportedBy={report.reportedBy}
+                        title={report.title}
+                    />
 
-                            {/* <Text style={styles.reportId}>#{report._id.slice(-6)}</Text> */}
-                        </View>
+                    <ImageGallery images={report.images} onImagePress={handleImagePress} />
 
-                        <Text style={styles.statusDescription}>{status.description}</Text>
+                    <LocationInfo location={report.location} onMapPress={openMap} />
 
-                        {report.assignedTo ? <View style={styles.assignedInfo}>
-                            <UserIcon color="#6B7280" size={16} />
-                            <Text style={styles.assignedText}>
-                                Phụ trách: {report.assignedTo.name}
-                            </Text>
-                        </View> : null}
-                    </View>
+                    <WasteInfo
+                        priority={report.priority}
+                        severity={severity}
+                        wasteType={wasteType}
+                    />
 
-                    {/* Title & Description */}
-                    <View style={styles.contentCard}>
-                        <Text style={styles.reportTitle}>{report.title}</Text>
-                        <Text style={styles.reportDescription}>{report.description}</Text>
+                    <TagsSection tags={report.tags} />
 
-                        {/* Meta info */}
-                        <View style={styles.metaInfo}>
-                            <View style={styles.metaItem}>
-                                <CalendarIcon color="#6B7280" size={16} />
-                                <Text style={styles.metaText}>{formatDate(report.createdAt)}</Text>
-                            </View>
+                    <AIClassificationComponent
+                        aiClassification={report.aiClassification}
+                        formatDate={formatDate}
+                    />
 
-                            <View style={styles.metaItem}>
-                                <UserIcon color="#6B7280" size={16} />
-                                <Text style={styles.metaText}>Báo cáo bởi: {report.reportedBy.name}</Text>
-                            </View>
-                        </View>
-                    </View>
+                    <ResolutionInfo
+                        formatCurrency={formatCurrency}
+                        formatDate={formatDate}
+                        resolution={report.resolution}
+                    />
 
-                    {/* Images Gallery */}
-                    <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Hình ảnh ({report.images.length})</Text>
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            style={styles.imageGallery}
-                        >
-                            {report.images.map((image, index) => (
-                                <TouchableOpacity
-                                    key={index}
-                                    onPress={() => {
-                                        setSelectedImageIndex(index);
-                                        setShowImageModal(true);
-                                    }}
-                                    style={styles.imageContainer}
-                                >
-                                    <Image source={{ uri: image }} style={styles.galleryImage} />
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-
-                    {/* Location */}
-                    <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Vị trí</Text>
-                        <TouchableOpacity onPress={openMap} style={styles.locationInfo}>
-                            <View style={styles.locationText}>
-                                <MapPinIcon color="#8B5CF6" size={20} />
-                                <View style={styles.locationDetails}>
-                                    <Text style={styles.locationAddress}>{report.location.address}</Text>
-                                    <Text style={styles.locationSub}>
-                                        {report.location.ward}, {report.location.district}, {report.location.city}
-                                    </Text>
-                                </View>
-                            </View>
-                            <ArrowTopRightOnSquareIcon color="#8B5CF6" size={20} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Waste Info */}
-                    <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Thông tin rác thải</Text>
-
-                        <View style={styles.wasteInfoGrid}>
-                            <View style={styles.wasteInfoItem}>
-                                <Text style={styles.wasteInfoLabel}>Loại rác thải</Text>
-                                <View style={styles.wasteTypeContainer}>
-                                    <Text style={styles.wasteTypeIcon}>{wasteType.icon}</Text>
-                                    <Text style={styles.wasteTypeText}>{wasteType.name}</Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.wasteInfoItem}>
-                                <Text style={styles.wasteInfoLabel}>Mức độ nghiêm trọng</Text>
-                                <View style={[styles.severityContainer, { backgroundColor: severity.color }]}>
-                                    <Text style={styles.severityText}>{severity.name}</Text>
-                                </View>
-                            </View>
-
-                            <View style={styles.wasteInfoItem}>
-                                <Text style={styles.wasteInfoLabel}>Độ ưu tiên</Text>
-                                <Text style={[
-                                    styles.priorityText,
-                                    { color: report.priority >= 7 ? '#EF4444' : report.priority >= 4 ? '#F59E0B' : '#10B981' }
-                                ]}>
-                                    {report.priority}/10
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Tags */}
-                    {report.tags && report.tags.length > 0 ? <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Thẻ phân loại</Text>
-                        <View style={styles.tagsContainer}>
-                            {report.tags.map((tag, index) => (
-                                <View key={index} style={styles.tag}>
-                                    <TagIcon color="#6B7280" size={12} />
-                                    <Text style={styles.tagText}>{tag}</Text>
-                                </View>
-                            ))}
-                        </View>
-                    </View> : null}
-
-                    {/* AI Classification */}
-                    {report.aiClassification ? <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Phân loại AI</Text>
-                        <View style={styles.aiContainer}>
-                            <View style={styles.aiHeader}>
-                                <Text style={styles.aiTitle}>
-                                    Phát hiện: {report.aiClassification.detectedTypes.join(', ')}
-                                </Text>
-                                <Text style={styles.aiConfidence}>
-                                    {Math.round(report.aiClassification.confidence * 100)}%
-                                </Text>
-                            </View>
-                            <Text style={styles.aiMeta}>
-                                Xử lý: {formatDate(report.aiClassification.processedAt)} •
-                                Model: {report.aiClassification.modelVersion}
-                            </Text>
-                        </View>
-                    </View> : null}
-
-                    {/* Resolution (if resolved) */}
-                    {(report.resolution && report.resolution.length > 0) ? <View style={styles.contentCard}>
-                        <Text style={styles.sectionTitle}>Kết quả xử lý</Text>
-                        <View style={styles.resolutionContainer}>
-                            <View style={styles.resolutionHeader}>
-                                <CheckCircleIconSolid color="#10B981" size={20} />
-                                <Text style={styles.resolutionTitle}>Đã xử lý hoàn tất</Text>
-                            </View>
-
-                            <Text style={styles.resolutionNote}>{report.resolution.resolutionNote}</Text>
-
-                            <View style={styles.resolutionMeta}>
-                                <View style={styles.resolutionMetaItem}>
-                                    <Text style={styles.resolutionMetaLabel}>Xử lý bởi:</Text>
-                                    <Text style={styles.resolutionMetaValue}>{report.resolution.resolvedBy.name}</Text>
-                                </View>
-
-                                <View style={styles.resolutionMetaItem}>
-                                    <Text style={styles.resolutionMetaLabel}>Thời gian:</Text>
-                                    <Text style={styles.resolutionMetaValue}>{formatDate(report.resolution.resolvedAt)}</Text>
-                                </View>
-
-                                {report.resolution.estimatedWeight ? <View style={styles.resolutionMetaItem}>
-                                    <ScaleIcon color="#6B7280" size={16} />
-                                    <Text style={styles.resolutionMetaValue}>{report.resolution.estimatedWeight} kg</Text>
-                                </View> : null}
-
-                                {report.resolution.processingCost ? <View style={styles.resolutionMetaItem}>
-                                    <CurrencyDollarIcon color="#6B7280" size={16} />
-                                    <Text style={styles.resolutionMetaValue}>{formatCurrency(report.resolution.processingCost)}</Text>
-                                </View> : null}
-                            </View>
-
-                            {/* Resolution Images */}
-                            {report.resolution.resolutionImages && report.resolution.resolutionImages.length > 0 ? <View style={styles.resolutionImagesContainer}>
-                                <Text style={styles.resolutionImagesTitle}>Hình ảnh sau xử lý:</Text>
-                                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                    {report.resolution.resolutionImages.map((image, index) => (
-                                        <Image
-                                            key={index}
-                                            source={{ uri: image }}
-                                            style={styles.resolutionImage}
-                                        />
-                                    ))}
-                                </ScrollView>
-                            </View> : null}
-                        </View>
-                    </View> : null}
-
-                    {/* Stats & Actions */}
-                    <View style={styles.contentCard}>
-                        <View style={styles.statsContainer}>
-                            <View style={styles.statsItem}>
-                                <EyeIcon color="#6B7280" size={20} />
-                                <Text style={styles.statsText}>{report.viewCount} lượt xem</Text>
-                            </View>
-                        </View>
-
-                        <View style={styles.actionsContainer}>
-                            <TouchableOpacity
-                                onPress={() => handleVote('up')}
-                                style={[
-                                    styles.voteButton,
-                                    userVote === 'up' && styles.voteButtonActive,
-                                ]}
-                            >
-                                {userVote === 'up' ? (
-                                    <HandThumbUpIconSolid color="#10B981" size={20} />
-                                ) : (
-                                    <HandThumbUpIcon color="#6B7280" size={20} />
-                                )}
-                                <Text style={[
-                                    styles.voteText,
-                                    userVote === 'up' && styles.voteTextActive,
-                                ]}>
-                                    {report.upvotes}
-                                </Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                onPress={() => handleVote('down')}
-                                style={[
-                                    styles.voteButton,
-                                    userVote === 'down' && styles.voteButtonActive,
-                                ]}
-                            >
-                                {userVote === 'down' ? (
-                                    <HandThumbDownIconSolid color="#EF4444" size={20} />
-                                ) : (
-                                    <HandThumbDownIcon color="#6B7280" size={20} />
-                                )}
-                                <Text style={[
-                                    styles.voteText,
-                                    userVote === 'down' && styles.voteTextActive,
-                                ]}>
-                                    {report.downvotes}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-
+                    <StatsAndActions
+                        downvotes={report.downvotes}
+                        onVote={handleVote}
+                        upvotes={report.upvotes}
+                        userVote={userVote}
+                        viewCount={report.viewCount}
+                    />
                 </Animated.View>
             </ScrollView>
 
-            {/* Image Modal */}
-            <Modal animationType="fade" transparent visible={showImageModal}>
-                <View style={styles.imageModalOverlay}>
-                    <TouchableOpacity
-                        onPress={() => { setShowImageModal(false); }}
-                        style={styles.imageModalClose}
-                    >
-                        <XMarkIcon color="#FFFFFF" size={24} />
-                    </TouchableOpacity>
+            <ImageModal
+                images={report.images}
+                onClose={() => { setShowImageModal(false); }}
+                selectedIndex={selectedImageIndex}
+                visible={showImageModal}
+            />
 
-                    <ScrollView
-                        horizontal
-                        pagingEnabled
-                        showsHorizontalScrollIndicator={false}
-                        style={styles.imageModalScroll}
-                    >
-                        {report.images.map((image, index) => (
-                            <View key={index} style={styles.imageModalContainer}>
-                                <Image source={{ uri: image }} style={styles.imageModalImage} />
-                            </View>
-                        ))}
-                    </ScrollView>
-
-                    <View style={styles.imageModalIndicator}>
-                        <Text style={styles.imageModalIndicatorText}>
-                            {selectedImageIndex + 1} / {report.images.length}
-                        </Text>
-                    </View>
-                </View>
-            </Modal>
-
-            {/* More Options Modal */}
-            <Modal animationType="slide" transparent visible={showMoreOptions}>
-                <View style={styles.modalOverlay}>
-                    <View style={styles.optionsModal}>
-                        <Text style={styles.optionsTitle}>Tùy chọn</Text>
-
-                        <TouchableOpacity style={styles.optionItem}>
-                            <Text style={styles.optionText}>Báo cáo vi phạm</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity style={styles.optionItem}>
-                            <Text style={styles.optionText}>Sao chép liên kết</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            onPress={() => { setShowMoreOptions(false); }}
-                            style={styles.optionItem}
-                        >
-                            <Text style={[styles.optionText, styles.optionTextCancel]}>Hủy</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
-
+            <OptionsModal
+                onClose={() => { setShowMoreOptions(false); }}
+                onCopyLink={() => {
+                    // TODO: Implement copy link
+                    setShowMoreOptions(false);
+                }}
+                onReportViolation={() => {
+                    // TODO: Implement report violation
+                    setShowMoreOptions(false);
+                }}
+                visible={showMoreOptions}
+            />
         </SafeAreaView>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    actionsContainer: {
-        flexDirection: 'row',
-        gap: 12,
-    },
-    aiConfidence: {
-        color: '#10B981',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    aiContainer: {
-        backgroundColor: '#F8FAFC',
-        borderColor: '#E2E8F0',
-        borderRadius: 12,
-        borderWidth: 1,
-        padding: 16,
-    },
-    aiHeader: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    aiMeta: {
-        color: '#64748B',
-        fontSize: 12,
-    },
-    aiTitle: {
-        color: '#475569',
-        flex: 1,
-        fontSize: 14,
-        fontWeight: '500',
-    },
     animatedContainer: {
         padding: 20,
-    },
-    assignedInfo: {
-        alignItems: 'center',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 8,
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 8,
-    },
-    assignedText: {
-        color: '#6B7280',
-        fontSize: 12,
-        marginLeft: 6,
     },
     backButton: {
         backgroundColor: '#8B5CF6',
@@ -637,20 +326,6 @@ const styles = StyleSheet.create({
     content: {
         flex: 1,
     },
-    contentCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        elevation: 3,
-        marginBottom: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            height: 2,
-            width: 0,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-    },
     errorContainer: {
         alignItems: 'center',
         flex: 1,
@@ -664,48 +339,6 @@ const styles = StyleSheet.create({
         marginBottom: 24,
         marginTop: 16,
     },
-    galleryImage: {
-        backgroundColor: '#F3F4F6',
-        borderRadius: 12,
-        height: 120,
-        width: 120,
-    },
-    header: {
-        alignItems: 'center',
-        backgroundColor: '#FFFFFF',
-        borderBottomColor: '#E5E7EB',
-        borderBottomWidth: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-    },
-    headerActions: {
-        flexDirection: 'row',
-        gap: 8,
-    },
-    headerButton: {
-        alignItems: 'center',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 20,
-        height: 40,
-        justifyContent: 'center',
-        width: 40,
-    },
-    headerTitle: {
-        color: '#111827',
-        flex: 1,
-        fontSize: 18,
-        fontWeight: '600',
-        marginHorizontal: 16,
-        textAlign: 'center',
-    },
-    imageContainer: {
-        marginHorizontal: 4,
-    },
-    imageGallery: {
-        marginHorizontal: -4,
-    },
     loadingContainer: {
         alignItems: 'center',
         flex: 1,
@@ -714,345 +347,6 @@ const styles = StyleSheet.create({
     loadingText: {
         color: '#6B7280',
         fontSize: 16,
-    },
-    locationAddress: {
-        color: '#111827',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    locationDetails: {
-        flex: 1,
-        marginLeft: 12,
-    },
-    locationInfo: {
-        alignItems: 'center',
-        backgroundColor: '#F8FAFC',
-        borderColor: '#E2E8F0',
-        borderRadius: 12,
-        borderWidth: 1,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        padding: 16,
-    },
-    locationSub: {
-        color: '#6B7280',
-        fontSize: 14,
-        marginTop: 2,
-    },
-    locationText: {
-        alignItems: 'center',
-        flex: 1,
-        flexDirection: 'row',
-    },
-    metaInfo: {
-        gap: 8,
-    },
-    metaItem: {
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    metaText: {
-        color: '#6B7280',
-        fontSize: 14,
-        marginLeft: 8,
-    },
-    priorityText: {
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    reportDescription: {
-        color: '#4B5563',
-        fontSize: 16,
-        lineHeight: 24,
-        marginBottom: 16,
-    },
-    reportId: {
-        color: '#6B7280',
-        fontFamily: 'monospace',
-        fontSize: 12,
-    },
-    reportTitle: {
-        color: '#111827',
-        fontSize: 20,
-        fontWeight: '700',
-        lineHeight: 28,
-        marginBottom: 12,
-    },
-    resolutionContainer: {
-        backgroundColor: '#F0FDF4',
-        borderColor: '#BBF7D0',
-        borderRadius: 12,
-        borderWidth: 1,
-        padding: 16,
-    },
-    resolutionHeader: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        marginBottom: 12,
-    },
-    resolutionImage: {
-        borderRadius: 8,
-        height: 80,
-        marginRight: 8,
-        width: 80,
-    },
-    resolutionImagesContainer: {
-        marginTop: 16,
-    },
-    resolutionImagesTitle: {
-        color: '#065F46',
-        fontSize: 14,
-        fontWeight: '500',
-        marginBottom: 8,
-    },
-    resolutionMeta: {
-        gap: 8,
-    },
-    resolutionMetaItem: {
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    resolutionMetaLabel: {
-        color: '#065F46',
-        fontSize: 12,
-        fontWeight: '500',
-        marginRight: 8,
-    },
-    resolutionMetaValue: {
-        color: '#047857',
-        fontSize: 12,
-        marginLeft: 4,
-    },
-    resolutionNote: {
-        color: '#047857',
-        fontSize: 14,
-        lineHeight: 20,
-        marginBottom: 16,
-    },
-    resolutionTitle: {
-        color: '#065F46',
-        fontSize: 16,
-        fontWeight: '600',
-        marginLeft: 8,
-    },
-    sectionTitle: {
-        color: '#111827',
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 12,
-    },
-    severityContainer: {
-        borderRadius: 8,
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-    },
-    severityText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: '600',
-    },
-    statsContainer: {
-        marginBottom: 16,
-    },
-    statsItem: {
-        alignItems: 'center',
-        flexDirection: 'row',
-    },
-    statsText: {
-        color: '#6B7280',
-        fontSize: 14,
-        marginLeft: 8,
-    },
-    statusBadge: {
-        alignItems: 'center',
-        borderRadius: 12,
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-    },
-    statusCard: {
-        backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        elevation: 3,
-        marginBottom: 16,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOffset: {
-            height: 2,
-            width: 0,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-    },
-    statusDescription: {
-        color: '#6B7280',
-        fontSize: 14,
-        lineHeight: 20,
-        marginBottom: 12,
-    },
-    statusHeader: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    statusText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: '600',
-        marginLeft: 6,
-    },
-    tag: {
-        alignItems: 'center',
-        backgroundColor: '#EFF6FF',
-        borderColor: '#DBEAFE',
-        borderRadius: 8,
-        borderWidth: 1,
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-    },
-    tagsContainer: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 8,
-    },
-    tagText: {
-        color: '#1E40AF',
-        fontSize: 12,
-        fontWeight: '500',
-        marginLeft: 4,
-    },
-    voteButton: {
-        alignItems: 'center',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 12,
-        flex: 1,
-        flexDirection: 'row',
-        justifyContent: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-    },
-    voteButtonActive: {
-        backgroundColor: '#EEF2FF',
-    },
-    voteText: {
-        color: '#6B7280',
-        fontSize: 14,
-        fontWeight: '500',
-        marginLeft: 8,
-    },
-    voteTextActive: {
-        color: '#8B5CF6',
-    },
-    wasteInfoGrid: {
-        gap: 16,
-    },
-    wasteInfoItem: {
-        alignItems: 'center',
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-    },
-    wasteInfoLabel: {
-        color: '#6B7280',
-        fontSize: 14,
-    },
-    wasteTypeContainer: {
-        alignItems: 'center',
-        backgroundColor: '#F3F4F6',
-        borderRadius: 8,
-        flexDirection: 'row',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-    },
-    wasteTypeIcon: {
-        fontSize: 16,
-        marginRight: 6,
-    },
-    wasteTypeText: {
-        color: '#374151',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    // Image Modal
-    imageModalClose: {
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-        height: 40,
-        justifyContent: 'center',
-        position: 'absolute',
-        right: 20,
-        top: 60,
-        width: 40,
-        zIndex: 10,
-    },
-    imageModalContainer: {
-        alignItems: 'center',
-        height: screenHeight,
-        justifyContent: 'center',
-        width: screenWidth,
-    },
-    imageModalImage: {
-        borderRadius: 12,
-        height: screenWidth - 40,
-        width: screenWidth - 40,
-    },
-    imageModalIndicator: {
-        alignSelf: 'center',
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        borderRadius: 20,
-        bottom: 60,
-        paddingHorizontal: 16,
-        paddingVertical: 8,
-        position: 'absolute',
-    },
-    imageModalIndicatorText: {
-        color: '#FFFFFF',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    imageModalOverlay: {
-        alignItems: 'center',
-        backgroundColor: 'rgba(0,0,0,0.9)',
-        flex: 1,
-        justifyContent: 'center',
-    },
-    imageModalScroll: {
-        flex: 1,
-    },
-    // Options Modal
-    modalOverlay: {
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        flex: 1,
-        justifyContent: 'flex-end',
-    },
-    optionItem: {
-        borderBottomColor: '#F3F4F6',
-        borderBottomWidth: 1,
-        paddingVertical: 16,
-    },
-    optionsModal: {
-        backgroundColor: '#FFFFFF',
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        padding: 24,
-    },
-    optionsTitle: {
-        color: '#111827',
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 20,
-        textAlign: 'center',
-    },
-    optionText: {
-        color: '#111827',
-        fontSize: 16,
-        textAlign: 'center',
-    },
-    optionTextCancel: {
-        color: '#EF4444',
-        fontWeight: '500',
     },
 });
 
