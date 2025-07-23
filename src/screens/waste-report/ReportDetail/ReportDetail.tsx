@@ -1,3 +1,4 @@
+import { getWasteReportDetail } from '@/services/functions/wasteReportApi';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     Alert,
@@ -48,18 +49,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { goBack } from '@/navigation';
 
-import { REPORT_STATUS, WASTE_TYPES } from '../ReportHistory/reportConstants';
+import { REPORT_STATUS, SEVERITY_LEVELS, WASTE_TYPES } from '../ReportHistory/reportConstants';
 
 const { height: screenHeight, width: screenWidth } = Dimensions.get('window');
 
 // Constants from backend
-
-const SEVERITY_LEVELS = {
-    CRITICAL: { color: '#DC2626', description: 'Khẩn cấp', name: 'Rất cao' },
-    HIGH: { color: '#EF4444', description: 'Cần xử lý ngay', name: 'Cao' },
-    LOW: { color: '#10B981', description: 'Không cấp thiết', name: 'Thấp' },
-    MEDIUM: { color: '#F59E0B', description: 'Cần xử lý trong vài ngày', name: 'Trung bình' },
-};
 
 function ReportDetailScreen({ route }) {
     const { reportId } = route.params;
@@ -96,75 +90,13 @@ function ReportDetailScreen({ route }) {
             setIsLoading(true);
 
             // Simulate API call - replace with actual API
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Mock data based on IWasteReport interface
-            const mockReport = {
-                _id: reportId,
-                aiClassification: {
-                    confidence: 0.89,
-                    detectedTypes: ['BULKY', 'PLASTIC'],
-                    modelVersion: 'v1.2.0',
-                    processedAt: new Date('2024-01-15T10:30:00Z'),
-                },
-                assignedAt: new Date('2024-01-15T14:20:00Z'),
-                assignedTo: {
-                    _id: 'staff456',
-                    avatar: 'https://picsum.photos/40/40?random=11',
-                    name: 'Phòng Tài nguyên & Môi trường',
-                },
-                createdAt: new Date('2024-01-15T09:15:00Z'),
-                description: 'Phát hiện bãi rác lớn với đồ nội thất cũ, vật liệu xây dựng và rác sinh hoạt. Tình trạng này đã kéo dài nhiều ngày, gây ô nhiễm môi trường và cản trở giao thông. Cần có biện pháp xử lý khẩn cấp để đảm bảo vệ sinh môi trường khu vực.',
-                downvotes: 2,
-                images: [
-                    `https://picsum.photos/400/300?random=1`,
-                    `https://picsum.photos/400/300?random=2`,
-                    `https://picsum.photos/400/300?random=3`,
-                    `https://picsum.photos/400/300?random=4`,
-                ],
-                location: {
-                    address: 'Số 1 Đại Cồ Việt',
-                    city: 'Hà Nội',
-                    coordinates: [105.8542, 21.0285],
-                    district: 'Hai Bà Trưng',
-                    ward: 'Bách Khoa',
-                },
-                priority: 8,
-                reportedBy: {
-                    _id: 'user123',
-                    avatar: 'https://picsum.photos/40/40?random=10',
-                    name: 'Nguyễn Văn An',
-                },
-                resolution: null, // Will be set if status is RESOLVED
-                severity: 'HIGH',
-                status: 'pending',
-                tags: ['public_area', 'near_school', 'urgent'],
-                title: 'Bãi rác tự phát tại vỉa hè đường Đại Cồ Việt',
-                updatedAt: new Date('2024-01-15T14:20:00Z'),
-                upvotes: 45,
-                viewCount: 234,
-                wasteType: 'BULKY',
-            };
-
-            // Add resolution data if resolved
-            if (mockReport.status === 'RESOLVED') {
-                mockReport.resolution = {
-                    estimatedWeight: 250, // kg
-                    processingCost: 500_000, // VND
-                    resolutionImages: [
-                        `https://picsum.photos/400/300?random=20`,
-                        `https://picsum.photos/400/300?random=21`,
-                    ],
-                    resolutionNote: 'Đã thu gom và xử lý toàn bộ rác thải. Khu vực đã được làm sạch và khử trùng.',
-                    resolvedAt: new Date('2024-01-16T16:45:00Z'),
-                    resolvedBy: {
-                        _id: 'staff456',
-                        name: 'Phòng Tài nguyên & Môi trường',
-                    },
-                };
+            console.log("response::", reportId)
+            const response = await getWasteReportDetail(reportId);
+            console.log("response::", response.data?.data)
+            if (response.data?.data) {
+                setReport(response.data.data);
             }
 
-            setReport(mockReport);
         } catch {
             Alert.alert('Lỗi', 'Không thể tải chi tiết báo cáo');
             goBack();
@@ -282,6 +214,7 @@ function ReportDetailScreen({ route }) {
         );
     }
 
+    console.log("report::::::::", report)
     const wasteType = WASTE_TYPES[report.wasteType];
     const status = REPORT_STATUS[report.status];
     const severity = SEVERITY_LEVELS[report.severity];
@@ -475,7 +408,7 @@ function ReportDetailScreen({ route }) {
                     </View> : null}
 
                     {/* Resolution (if resolved) */}
-                    {report.resolution ? <View style={styles.contentCard}>
+                    {(report.resolution && report.resolution.length > 0) ? <View style={styles.contentCard}>
                         <Text style={styles.sectionTitle}>Kết quả xử lý</Text>
                         <View style={styles.resolutionContainer}>
                             <View style={styles.resolutionHeader}>

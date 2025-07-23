@@ -60,6 +60,15 @@ export const getNearbyWasteReports = async (parameters: {
 };
 
 /**
+ * Lấy chi tiết báo cáo rác thải theo ID
+ * @param wasteReportId ID của báo cáo rác thải
+ * @returns Promise<{ message: string; data: any }>
+ */
+export const getWasteReportDetail = async (wasteReportId: string) => {
+  return get(`/waste-reports/${wasteReportId}`);
+};
+
+/**
  * Upload tối đa 5 ảnh báo cáo rác thải (tự động nén và tối ưu hóa ảnh)
  * @param images Mảng file ảnh (File, Blob, hoặc { uri, name, type } cho React Native)
  * @param extraData Các trường khác (nếu có) theo UploadWasteImagesDto

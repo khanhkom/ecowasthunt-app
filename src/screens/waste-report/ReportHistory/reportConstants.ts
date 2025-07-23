@@ -11,14 +11,22 @@ import {
 } from 'react-native-heroicons/outline';
 
 export const WASTE_TYPES = {
-  BULKY: { color: '#EF4444', icon: '🪑', name: 'Cồng kềnh' },
-  ELECTRONIC: { color: '#7C3AED', icon: '📱', name: 'Điện tử' },
-  GLASS: { color: '#8B5CF6', icon: '🍶', name: 'Thủy tinh' },
-  HAZARDOUS: { color: '#DC2626', icon: '☢️', name: 'Nguy hại' },
-  METAL: { color: '#F59E0B', icon: '🔩', name: 'Kim loại' },
-  ORGANIC: { color: '#84CC16', icon: '🍎', name: 'Hữu cơ' },
-  PAPER: { color: '#10B981', icon: '📄', name: 'Giấy' },
-  PLASTIC: { color: '#3B82F6', icon: '♻️', name: 'Nhựa' },
+  bulky: { color: '#EF4444', icon: '🪑', name: 'Cồng kềnh' },
+  construction: { color: '#F59E0B', icon: '🏗️', name: 'Xây dựng' },
+  electronic: { color: '#7C3AED', icon: '📱', name: 'Điện tử' },
+  general: { color: '#6B7280', icon: '🗑️', name: 'Thông thường' },
+  hazardous: { color: '#DC2626', icon: '☢️', name: 'Nguy hại' },
+  illegal_dumping: { color: '#991B1B', icon: '🚫', name: 'Đổ trái phép' },
+  medical: { color: '#EC4899', icon: '🏥', name: 'Y tế' },
+  mixed: { color: '#8B5CF6', icon: '�', name: 'Hỗn hợp' },
+  organic: { color: '#84CC16', icon: '🍎', name: 'Hữu cơ' },
+  recyclable: { color: '#10B981', icon: '♻️', name: 'Tái chế' },
+
+  // Các loại phụ (nếu cần)
+  glass: { color: '#8B5CF6', icon: '🍶', name: 'Thủy tinh' },
+  metal: { color: '#F59E0B', icon: '🔩', name: 'Kim loại' },
+  paper: { color: '#10B981', icon: '📄', name: 'Giấy' },
+  plastic: { color: '#3B82F6', icon: '♻️', name: 'Nhựa' },
 };
 
 export const REPORT_STATUS = {
@@ -65,12 +73,15 @@ export const REPORT_STATUS = {
 };
 
 export const SEVERITY_LEVELS = {
-  CRITICAL: { color: '#DC2626', name: 'Khẩn cấp' },
-  HIGH: { color: '#EF4444', name: 'Cao' },
-  LOW: { color: '#10B981', name: 'Thấp' },
-  MEDIUM: { color: '#F59E0B', name: 'TB' },
+  critical: { color: '#DC2626', description: 'Khẩn cấp', name: 'Rất cao' },
+  high: { color: '#EF4444', description: 'Cần xử lý ngay', name: 'Cao' },
+  low: { color: '#10B981', description: 'Không cấp thiết', name: 'Thấp' },
+  medium: {
+    color: '#F59E0B',
+    description: 'Cần xử lý trong vài ngày',
+    name: 'Trung bình',
+  },
 };
-
 export const FILTER_OPTIONS = [
   { id: '', name: 'Tất cả' },
   { id: 'pending', name: 'Chờ xử lý' },

@@ -178,7 +178,7 @@ function MyReportsScreen() {
     }, [showSearchInput]);
 
     const handleReportPress = useCallback((report) => {
-        navigate(Paths.ReportDetail, { reportId: report._id });
+        navigate(Paths.ReportDetail, { reportId: report.id });
     }, []);
 
     const handleCreateReport = useCallback(() => {
