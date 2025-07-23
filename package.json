@@ -17,6 +17,7 @@
     "bootsplash:generate": "react-native-bootsplash generate svgs/splash_icon_1.png --platforms=android,ios,web --background=F5FCFF --logo-width=200 --assets-output=assets/bootsplash --flavor=main --html=public/index.html"
   },
   "dependencies": {
+    "@react-native-community/slider": "^4.5.7",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/bottom-tabs": "^7.4.2",
     "@react-navigation/native": "^7.1.1",
@@ -31,8 +32,10 @@
     "react-i18next": "^15.4.1",
     "react-native": "0.78.2",
     "react-native-bootsplash": "^6.3.10",
+    "react-native-geolocation-service": "^5.3.1",
     "react-native-gesture-handler": "^2.25.0",
     "react-native-heroicons": "^4.0.0",
+    "react-native-image-picker": "^8.2.1",
     "react-native-mmkv": "^3.2.0",
     "react-native-reanimated": "^3.17.2",
     "react-native-safe-area-context": "^5.3.0",

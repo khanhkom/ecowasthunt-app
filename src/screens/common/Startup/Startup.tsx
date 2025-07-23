@@ -33,6 +33,7 @@ function Startup({ navigation }: RootScreenProps<Paths.Startup>) {
       'accessToken' in authData &&
       typeof authData.accessToken === 'string'
     ) {
+      console.log("authData::", authData)
       setAuthToken(authData.accessToken);
       navigation.reset({
         index: 0,

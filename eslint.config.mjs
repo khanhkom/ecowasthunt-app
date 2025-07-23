@@ -62,11 +62,13 @@ export default tseslint.config(
       '@typescript-eslint/consistent-type-definitions': [ERROR, 'type'],
       '@typescript-eslint/dot-notation': [ERROR, { allowKeywords: true }],
       '@typescript-eslint/no-empty-function': OFF,
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
       '@typescript-eslint/restrict-template-expressions': OFF,
       'import/no-unresolved': OFF, // handled by TypeScript
+
       'no-console': [ERROR, { allow: ['warn', 'error'] }],
       'no-magic-numbers': OFF,
-
       'perfectionist/sort-imports': [
         'error',
         {
@@ -116,6 +118,7 @@ export default tseslint.config(
       'unicorn/no-keyword-prefix': OFF,
       'unicorn/no-useless-undefined': OFF,
       'unicorn/prefer-top-level-await': 0, // not valid on RN for the moment
+
       'unicorn/prevent-abbreviations': [
         ERROR,
         {
